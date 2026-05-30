@@ -239,7 +239,7 @@ let modalAction = null, modalData = {};
 
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function thisMonth(){ return new Date().toISOString().slice(0,7); }
-function fmt(n){ return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN"}).format(n); }
+function fmt(n){ return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",minimumFractionDigits:0,maximumFractionDigits:0}).format(n); }
 function fmtShort(n){ return Math.abs(n)>=1000?"$"+(n/1000).toFixed(1)+"k":"$"+Math.round(n); }
 function fmtDate(d){ return new Date(d+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }
 function monthLabel(o){ const d=new Date(); d.setMonth(d.getMonth()+o); return d.toLocaleDateString("es-MX",{month:"short"}).toUpperCase(); }
@@ -364,9 +364,10 @@ function render(){
   const filtered=transactions.filter(t=>t.fecha.startsWith(month));
   const totalIn=filtered.filter(t=>t.tipo==="ingreso").reduce((s,t)=>s+t.monto,0);
   const totalOut=filtered.filter(t=>t.tipo==="gasto").reduce((s,t)=>s+t.monto,0);
-  const balance=totalIn-totalOut;
+  const totalDebtCalc=debts.filter(d=>d.paid>0).reduce((s,d)=>s+(d.total-d.paid),0);
+  const balance=totalIn-totalOut-totalDebtCalc;
   const el=document.getElementById("content");
-  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance);
+  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc);
   else if(currentView==="add") renderAdd(el);
   else if(currentView==="savings") renderSavings(el);
   else if(currentView==="debts") renderDebts(el);
@@ -374,7 +375,7 @@ function render(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
-function renderDashboard(el,filtered,totalIn,totalOut,balance){
+function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   const positive=balance>=0;
   const total=totalIn+totalOut;
   const byCat=CATS.gasto.map(cat=>({cat,total:filtered.filter(t=>t.tipo==="gasto"&&t.categoria===cat).reduce((s,t)=>s+t.monto,0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
@@ -382,22 +383,19 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance){
   const recent=[...filtered].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,6);
   const totalSaved=goals.reduce((s,g)=>s+(g.saved||0),0);
   const fc=getForecast();
-
-  // DEBTS summary
   const pendingDebts=debts.filter(d=>d.paid<d.total);
-  const totalDebt=debts.reduce((s,d)=>s+(d.total-d.paid),0);
-  const paidDebts=debts.filter(d=>d.paid>=d.total);
 
   let html=`
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
-    <div id="balance-label">Balance del mes</div>
+    <div id="balance-label">Balance real (incluye deudas)</div>
     <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(balance)}</div>
     <div class="balance-row">
       <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
       <div class="balance-stat" style="padding-left:16px"><div class="balance-stat-label" style="color:#f87171">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
-      ${totalDebt>0?`<div style="width:1px;background:#2a2a3a"></div><div class="balance-stat" style="padding-left:16px"><div class="balance-stat-label" style="color:#fb923c">⚠ DEUDAS</div><div class="balance-stat-val" style="color:#fb923c">-${fmt(totalDebt)}</div></div>`:""}
+      <div style="width:1px;background:#2a2a3a"></div>
+      <div class="balance-stat" style="padding-left:16px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#4ade80"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
     </div>
   </div>`;
 
@@ -581,7 +579,7 @@ function renderDebts(el){
 function openAddDebtModal(){
   openModal("Nueva deuda",
     `<div class="modal-row"><label class="form-label">Nombre / Descripción</label><input id="d-name" class="form-input" placeholder="Ej: Tarjeta de crédito, Préstamo…" /></div>
-    <div class="modal-row"><label class="form-label">Monto total ($)</label><input id="d-total" class="form-input" type="number" min="0.01" step="0.01" placeholder="0.00" style="font-family:'DM Mono',monospace;font-size:18px" /></div>
+    <div class="modal-row"><label class="form-label">Monto total ($)</label><input id="d-total" class="form-input" type="number" min="0.01" step="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:18px" /></div>
     <div class="modal-row"><label class="form-label">Fecha de vencimiento (opcional)</label><input id="d-venc" class="form-input" type="date" style="font-family:'DM Mono',monospace;color:#ccc" /></div>
     <div class="modal-row"><label class="form-label">Categoría</label><select id="d-cat" class="form-input" style="color:#ccc"><option>Tarjeta de crédito</option><option>Préstamo personal</option><option>Hipoteca</option><option>Auto</option><option>Servicios</option><option>Familiar</option><option>General</option></select></div>`,
     "Agregar deuda","primary","addDebt",{});
@@ -591,7 +589,7 @@ function openPayDebtModal(id){
   const d=debts.find(d=>d.id===id);
   const remain=d.total-d.paid;
   openModal(`Registrar pago — ${esc(d.name)}`,
-    `<div class="modal-row"><label class="form-label">Monto a pagar ($)</label><input id="d-pay" class="form-input" type="number" min="0.01" step="0.01" placeholder="0.00" style="font-family:'DM Mono',monospace;font-size:20px" /><div style="font-size:12px;color:#666;margin-top:6px">Pendiente: <strong style="color:#fb923c">${fmt(remain)}</strong></div></div>`,
+    `<div class="modal-row"><label class="form-label">Monto a pagar ($)</label><input id="d-pay" class="form-input" type="number" min="0.01" step="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:20px" /><div style="font-size:12px;color:#666;margin-top:6px">Pendiente: <strong style="color:#fb923c">${fmt(remain)}</strong></div></div>`,
     "Registrar pago","primary","payDebt",{id});
 }
 
@@ -670,7 +668,7 @@ function renderAdd(el){
       <button class="type-btn ${isIn?"active-in":""}" onclick="setFormTipo('ingreso')">↑ Ingreso</button>
     </div>
     <div style="margin-bottom:18px"><label class="form-label">Descripción</label><input class="form-input" id="f-desc" type="text" placeholder="Ej: Pago renta, Cena…" value="${esc(form.descripcion)}" oninput="form.descripcion=this.value" /></div>
-    <div style="margin-bottom:18px"><label class="form-label">Monto ($)</label><div style="position:relative"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#555;font-family:'DM Mono',monospace;font-size:15px">$</span><input class="form-input" id="f-monto" type="number" min="0" step="0.01" placeholder="0.00" style="padding-left:30px;font-family:'DM Mono',monospace;font-size:20px;font-weight:500" value="${form.monto}" oninput="form.monto=this.value" /></div></div>
+    <div style="margin-bottom:18px"><label class="form-label">Monto ($)</label><div style="position:relative"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#555;font-family:'DM Mono',monospace;font-size:15px">$</span><input class="form-input" id="f-monto" type="number" min="0" step="1" placeholder="0" style="padding-left:30px;font-family:'DM Mono',monospace;font-size:20px;font-weight:500" value="${form.monto}" oninput="form.monto=this.value" /></div></div>
     <div style="margin-bottom:18px"><label class="form-label">Categoría</label><div class="cats-wrap">${cats.map(cat=>`<button class="cat-btn ${form.categoria===cat?"selected":""}" onclick="setFormCat('${cat}')">${ICONS[cat]} ${cat}</button>`).join("")}</div></div>
     <div style="margin-bottom:22px"><label class="form-label">Fecha</label><input class="form-input" id="f-fecha" type="date" value="${form.fecha}" style="font-family:'DM Mono',monospace;color:#ccc" oninput="form.fecha=this.value" /></div>
     <button class="submit-btn" style="background:${btnGrad}" onclick="submitForm()">Registrar ${isIn?"ingreso":"gasto"}</button>
@@ -700,14 +698,14 @@ function openNewGoalModal(){
   openModal("Nueva meta de ahorro",
     `<div class="modal-row"><div class="form-label">Ícono</div><div style="display:flex;flex-wrap:wrap;gap:6px">${emojiBtns}</div><div id="mg-emoji-display" style="font-size:28px;text-align:center;margin-top:6px">${GOAL_EMOJIS[0]}</div></div>
     <div class="modal-row"><label class="form-label">Nombre</label><input id="mg-name" class="form-input" placeholder="Ej: Viaje a Europa" /></div>
-    <div class="modal-row"><label class="form-label">Monto objetivo ($)</label><input id="mg-target" class="form-input" type="number" min="1" placeholder="0.00" style="font-family:'DM Mono',monospace;font-size:18px" /></div>`,
+    <div class="modal-row"><label class="form-label">Monto objetivo ($)</label><input id="mg-target" class="form-input" type="number" min="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:18px" /></div>`,
     "Crear meta","primary","addGoal",{});
   setTimeout(()=>{ const f=document.querySelector('.emoji-opt'); if(f){ f.classList.add('selected'); f.style.background='#1e1e3a'; f.style.borderColor='#4c3d9a'; f.style.color='#a78bfa'; } },50);
 }
 function openDepositModal(id,isWithdraw){
   const g=goals.find(g=>g.id===id);
   openModal(isWithdraw?`Retirar de "${g.name}"`:  `Depositar en "${g.name}"`,
-    `<div class="modal-row"><label class="form-label">${isWithdraw?"Monto a retirar":"Monto a depositar"} ($)</label><input id="mg-deposit" class="form-input" type="number" min="0.01" step="0.01" placeholder="0.00" style="font-family:'DM Mono',monospace;font-size:20px" />${isWithdraw?`<div style="font-size:12px;color:#666;margin-top:6px">Disponible: ${fmt(g.saved||0)}</div>`:""}</div>`,
+    `<div class="modal-row"><label class="form-label">${isWithdraw?"Monto a retirar":"Monto a depositar"} ($)</label><input id="mg-deposit" class="form-input" type="number" min="0.01" step="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:20px" />${isWithdraw?`<div style="font-size:12px;color:#666;margin-top:6px">Disponible: ${fmt(g.saved||0)}</div>`:""}</div>`,
     isWithdraw?"Retirar":"Depositar",isWithdraw?"danger":"primary",isWithdraw?"withdraw":"deposit",{id});
 }
 function askDeleteGoal(id){
