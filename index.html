@@ -925,11 +925,11 @@ function checkDailyReminder() {
 
 
 // ── GOOGLE SHEETS SYNC ────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbxCuRM9ZUbExVrk96qpoo3t6LYbjNZjgDNG4paCses3vNnm_F2E65R8BUDOHOLZa_8bEQ/exec"; // <- reemplaza con tu Web App URL de Apps Script
+const API_URL = "https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec"; // <- reemplaza con tu Web App URL de Apps Script
 
 async function manualSync(){
   const btn=document.getElementById("sync-btn");
-  if(API_URL==="https://script.google.com/macros/s/AKfycbxCuRM9ZUbExVrk96qpoo3t6LYbjNZjgDNG4paCses3vNnm_F2E65R8BUDOHOLZa_8bEQ/exec"){ showToast("Falta configurar la URL de Google Sheets","err"); return; }
+  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec"){ showToast("Falta configurar la URL de Google Sheets","err"); return; }
   btn.style.transform="rotate(360deg)"; btn.style.transition="transform .6s";
   showToast("Sincronizando...");
   await syncToCloud();
@@ -939,7 +939,7 @@ async function manualSync(){
 }
 
 async function syncToCloud(){
-  if(API_URL==="https://script.google.com/macros/s/AKfycbxCuRM9ZUbExVrk96qpoo3t6LYbjNZjgDNG4paCses3vNnm_F2E65R8BUDOHOLZa_8bEQ/exec") return;
+  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec") return;
   try{
     await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"Transacciones",action:"save",data:[["id","tipo","descripcion","monto","categoria","fecha"],...transactions.map(t=>[t.id,t.tipo,t.descripcion,t.monto,t.categoria,t.fecha])]})});
     await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"Deudas",action:"save",data:[["id","name","total","paid","vencimiento","categoria"],...debts.map(d=>[d.id,d.name,d.total,d.paid,d.vencimiento||"",d.categoria||""])]})});
@@ -948,7 +948,7 @@ async function syncToCloud(){
 }
 
 async function loadFromCloud(){
-  if(API_URL==="https://script.google.com/macros/s/AKfycbxCuRM9ZUbExVrk96qpoo3t6LYbjNZjgDNG4paCses3vNnm_F2E65R8BUDOHOLZa_8bEQ/exec") return;
+  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec") return;
   try{
     const r1=await fetch(API_URL+"?sheet=Transacciones"); const d1=await r1.json();
     if(d1.length>1) transactions=d1.slice(1).map(r=>({id:r[0],tipo:r[1],descripcion:r[2],monto:Number(r[3]),categoria:r[4],fecha:r[5]}));
