@@ -223,6 +223,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
     Deudas
   </button>
+  <button class="nav-btn" id="nav-monthly" onclick="setView('monthly')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="2"/></svg>
+    Del mes
+  </button>
   <button class="nav-add-btn" onclick="setView('add')">
     <div class="nav-add-inner">+</div>
   </button>
@@ -268,6 +272,7 @@ let transactions = load("fin_tx",[]);
 let goals        = load("fin_goals",[]);
 // debt: {id, name, total, paid, vencimiento, categoria, pagos:[{date,amount}]}
 let debts        = load("fin_debts",[]);
+let monthlyDebts = load("fin_monthly_debts",[]); // {id, name, amount, categoria, pagado}
 
 let currentView = "dashboard";
 let form = { tipo:"gasto", descripcion:"", monto:"", categoria:"Alimentación", fecha:todayStr() };
@@ -341,6 +346,14 @@ function modalConfirm(){
     if(!name||isNaN(total)||total<=0){ showToast("Completa nombre y monto","err"); return; }
     debts.push({id:Date.now(),name,total,paid:0,vencimiento:venc,categoria:cat,pagos:[]});
     save("fin_debts",debts); syncToCloud(); showToast("Deuda agregada ✓"); closeModal(); render(); renderTicker();
+  } else if(modalAction==="addMonthlyDebt"){
+    const name=document.getElementById("md-name")?.value.trim();
+    const amount=parseFloat(document.getElementById("md-amount")?.value);
+    const cat=document.getElementById("md-cat")?.value||"Otro";
+    if(!name||isNaN(amount)||amount<=0){ showToast("Completa todos los campos","err"); return; }
+    monthlyDebts.push({id:Date.now(),name,amount,categoria:cat,pagado:false});
+    save("fin_monthly_debts",monthlyDebts); syncToCloud();
+    showToast("Deuda del mes agregada ✓"); closeModal(); render();
   } else if(modalAction==="payDebt"){
     const amount=parseFloat(document.getElementById("d-pay")?.value);
     const d=debts.find(d=>d.id===modalData.id);
@@ -404,6 +417,7 @@ function render(){
   const balance=totalIn-totalOut-totalDebtCalc;
   const el=document.getElementById("content");
   if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc);
+  else if(currentView==="monthly") renderMonthlyDebts(el);
   else if(currentView==="add") renderAdd(el);
   else if(currentView==="savings") renderSavings(el);
   else if(currentView==="debts") renderDebts(el);
@@ -426,12 +440,16 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
     <div id="balance-label">Balance real (incluye deudas)</div>
     <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(balance)}</div>
-    <div class="balance-row">
+    <div class="balance-row" style="flex-wrap:wrap;gap:10px">
       <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:16px"><div class="balance-stat-label" style="color:#f87171">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#f87171">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:16px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#4ade80"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#4ade80"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
+      <div style="width:100%;height:1px;background:#2a2a3a"></div>
+      <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      <div style="width:1px;background:#2a2a3a"></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
 
@@ -560,9 +578,18 @@ function renderDebts(el){
     </div>`:""}
   </div>`;
 
-  html+=`<div id="debt-selection-bar" style="display:none;position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#1a1030,#0d0a1a);border:1px solid #4c3d9a;border-radius:14px;padding:"12px 16px";margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-    <span style="font-size:13px;color:#a78bfa;font-weight:600" id="debt-selection-count">0 seleccionadas</span>
-    <span style="font-family:monospace;font-weight:700;font-size:18px;color:#fff" id="debt-selection-total">$0</span>
+  html+=`<div id="debt-selection-bar" style="display:none;position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#1a1030,#0d0a1a);border:2px solid #4ade80;border-radius:16px;padding:14px 18px;margin-bottom:14px;flex-direction:column;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>
+        <span style="font-size:13px;color:#4ade80;font-weight:700;letter-spacing:.03em" id="debt-selection-count">0 seleccionadas</span>
+      </div>
+      <button onclick="clearDebtSelection()" style="background:none;border:none;color:#555;font-size:18px;cursor:pointer;padding:0 4px">×</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:11px;color:#666;letter-spacing:.06em;text-transform:uppercase">Total seleccionado</span>
+      <span style="font-family:monospace;font-weight:700;font-size:22px;color:#fff;letter-spacing:-.02em" id="debt-selection-total">$0</span>
+    </div>
   </div>`;
   if(debts.length===0){
     html+=`<div class="card"><div class="empty"><div class="empty-icon">💳</div>Sin deudas registradas.<br><button onclick="openAddDebtModal()" style="margin-top:14px;background:#2a1a0a;border:1px solid #4a3020;color:#fb923c;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Agregar primera deuda</button></div></div>`;
@@ -581,7 +608,8 @@ function renderDebts(el){
         const pct=Math.round((d.paid/d.total)*100);
         const overdue=d.vencimiento&&d.vencimiento<todayStr();
         const duesSoon=d.vencimiento&&!overdue&&d.vencimiento<=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
-        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"linear-gradient(135deg,#1a0808,#140a0a)":"#16161e"};border:1px solid ${overdue?"#4a1a1a":duesSoon?"#4a3010":"#2a2a3a"}">\n          <input type="checkbox" class="debt-select" onchange="updateDebtSelection()" style="width:20px;height:20px;margin-right:10px;accent-color:#f97316;flex-shrink:0;align-self:flex-start;margin-top:4px">
+        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"linear-gradient(135deg,#1a0808,#140a0a)":"#16161e"};border:1px solid ${overdue?"#4a1a1a":duesSoon?"#4a3010":"#2a2a3a"};cursor:pointer" onclick="toggleDebtCard(this)">
+          <div class="debt-checkbox" style="width:26px;height:26px;border-radius:50%;border:2px solid #333;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center;margin-right:4px;transition:all .2s;font-size:14px"></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <div class="debt-name">${esc(d.name)}</div>
@@ -631,14 +659,44 @@ function renderDebts(el){
   el.innerHTML=html;
 }
 
+function toggleDebtCard(card){
+  const isSelected = card.dataset.selected === "1";
+  const checkbox = card.querySelector(".debt-checkbox");
+  if(isSelected){
+    card.dataset.selected = "0";
+    card.style.border = `1px solid ${card.dataset.overdue==="1"?"#4a1a1a":card.dataset.soon==="1"?"#4a3010":"#2a2a3a"}`;
+    checkbox.style.background = "transparent";
+    checkbox.style.borderColor = "#333";
+    checkbox.style.color = "transparent";
+  } else {
+    card.dataset.selected = "1";
+    card.style.border = "2px solid #4ade80";
+    checkbox.style.background = "#4ade80";
+    checkbox.style.borderColor = "#4ade80";
+    checkbox.style.color = "#000";
+    checkbox.textContent = "✓";
+  }
+  updateDebtSelection();
+}
+
+function clearDebtSelection(){
+  document.querySelectorAll(".debt-card[data-selected='1']").forEach(c=>{
+    c.dataset.selected="0";
+    c.style.border=`1px solid #2a2a3a`;
+    const cb=c.querySelector(".debt-checkbox");
+    if(cb){ cb.style.background="transparent"; cb.style.borderColor="#333"; cb.textContent=""; }
+  });
+  updateDebtSelection();
+}
+
 function updateDebtSelection(){
-  const boxes=document.querySelectorAll(".debt-select");
-  let count=0,total=0;
-  boxes.forEach(b=>{ if(b.checked){ count++; total+=parseFloat(b.closest("[data-remain]").dataset.remain); } });
+  const cards=document.querySelectorAll(".debt-card[data-selected='1']");
+  let count=cards.length, total=0;
+  cards.forEach(c=>{ total+=parseFloat(c.dataset.remain||0); });
   const bar=document.getElementById("debt-selection-bar");
   if(count>0){
     bar.style.display="flex";
-    document.getElementById("debt-selection-count").textContent=count+" seleccionada"+(count>1?"s":"");
+    document.getElementById("debt-selection-count").textContent=count+" deuda"+(count>1?"s":"")+" seleccionada"+(count>1?"s":"");
     document.getElementById("debt-selection-total").textContent=fmt(total);
   } else { bar.style.display="none"; }
 }
@@ -925,11 +983,11 @@ function checkDailyReminder() {
 
 
 // ── GOOGLE SHEETS SYNC ────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec"; // <- reemplaza con tu Web App URL de Apps Script
+const API_URL = "https://script.google.com/macros/s/AKfycbwgwTGJMUlFUS2jIf8-Ew8rlVUiR0UNE9i20rE-kFDRI2ELnEVI3k2Wsi73UVWlXQLr/exec";
 
 async function manualSync(){
   const btn=document.getElementById("sync-btn");
-  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec"){ showToast("Falta configurar la URL de Google Sheets","err"); return; }
+  if(API_URL==="PEGA_TU_URL_AQUI"){ showToast("Falta configurar la URL de Google Sheets","err"); return; }
   btn.style.transform="rotate(360deg)"; btn.style.transition="transform .6s";
   showToast("Sincronizando...");
   await syncToCloud();
@@ -939,16 +997,17 @@ async function manualSync(){
 }
 
 async function syncToCloud(){
-  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec") return;
+  if(API_URL==="PEGA_TU_URL_AQUI") return;
   try{
     await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"Transacciones",action:"save",data:[["id","tipo","descripcion","monto","categoria","fecha"],...transactions.map(t=>[t.id,t.tipo,t.descripcion,t.monto,t.categoria,t.fecha])]})});
     await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"Deudas",action:"save",data:[["id","name","total","paid","vencimiento","categoria"],...debts.map(d=>[d.id,d.name,d.total,d.paid,d.vencimiento||"",d.categoria||""])]})});
     await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"Metas",action:"save",data:[["id","name","emoji","target","saved"],...goals.map(g=>[g.id,g.name,g.emoji,g.target,g.saved||0])]})});
+    await fetch(API_URL,{method:"POST",body:JSON.stringify({sheet:"MensualDebts",action:"save",data:[["id","name","amount","categoria","pagado"],...monthlyDebts.map(d=>[d.id,d.name,d.amount,d.categoria||"",d.pagado?1:0])]})});
   }catch(e){console.log("Sync error",e);}
 }
 
 async function loadFromCloud(){
-  if(API_URL==="https://script.google.com/macros/s/AKfycbzG3gryuDIIi5zghbWQoS1s6dYwLg9mBheY7B-S1FJi4TT5yRKwoj8IC5Pt-fWStYJBqA/exec") return;
+  if(API_URL==="PEGA_TU_URL_AQUI") return;
   try{
     const r1=await fetch(API_URL+"?sheet=Transacciones"); const d1=await r1.json();
     if(d1.length>1) transactions=d1.slice(1).map(r=>({id:r[0],tipo:r[1],descripcion:r[2],monto:Number(r[3]),categoria:r[4],fecha:r[5]}));
@@ -956,7 +1015,9 @@ async function loadFromCloud(){
     if(d2.length>1) debts=d2.slice(1).map(r=>({id:r[0],name:r[1],total:Number(r[2]),paid:Number(r[3]),vencimiento:r[4],categoria:r[5],pagos:[]}));
     const r3=await fetch(API_URL+"?sheet=Metas"); const d3=await r3.json();
     if(d3.length>1) goals=d3.slice(1).map(r=>({id:r[0],name:r[1],emoji:r[2],target:Number(r[3]),saved:Number(r[4]),deposits:[]}));
-    save("fin_tx",transactions); syncToCloud(); save("fin_debts",debts); syncToCloud(); save("fin_goals",goals); syncToCloud();
+    const r4=await fetch(API_URL+"?sheet=MensualDebts"); const d4=await r4.json();
+    if(d4.length>1) monthlyDebts=d4.slice(1).map(r=>({id:r[0],name:r[1],amount:Number(r[2]),categoria:r[3],pagado:Number(r[4])===1}));
+    save("fin_tx",transactions); save("fin_debts",debts); save("fin_goals",goals); save("fin_monthly_debts",monthlyDebts);
     render(); renderTicker();
   }catch(e){console.log("Load error",e);}
 }
@@ -975,6 +1036,107 @@ document.getElementById("lock-input").addEventListener("keydown",e=>{ if(e.key==
 if(sessionStorage.getItem("fin_unlocked")==="1") document.getElementById("lock-screen").classList.add("hidden");
 
 loadFromCloud();
+// ── MONTHLY DEBTS VIEW ────────────────────────────────────
+const MONTHLY_CATS = ["Gastos comunes","Tarjeta de crédito","Supermercado","Servicios","Arriendo","Internet/Telefonía","Seguro","Educación","Salud","Otro"];
+
+function renderMonthlyDebts(el){
+  const total = monthlyDebts.reduce((s,d)=>s+d.amount,0);
+  const pending = monthlyDebts.filter(d=>!d.pagado);
+  const paid = monthlyDebts.filter(d=>d.pagado);
+  const totalPending = pending.reduce((s,d)=>s+d.amount,0);
+  const totalPaid = paid.reduce((s,d)=>s+d.amount,0);
+
+  let html=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-weight:700;font-size:15px">Deudas del mes</div>
+    <button onclick="openAddMonthlyModal()" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Agregar</button>
+  </div>
+
+  <div style="display:flex;gap:9px;margin-bottom:14px">
+    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:#f59e0b;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">POR PAGAR</div>
+      <div style="font-family:monospace;font-size:17px;font-weight:700;color:#f59e0b">${fmt(totalPending)}</div>
+      <div style="font-size:11px;color:#555;margin-top:2px">${pending.length} ítem${pending.length!==1?"s":""}</div>
+    </div>
+    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:#4ade80;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">PAGADAS</div>
+      <div style="font-family:monospace;font-size:17px;font-weight:700;color:#4ade80">${fmt(totalPaid)}</div>
+      <div style="font-size:11px;color:#555;margin-top:2px">${paid.length} ítem${paid.length!==1?"s":""}</div>
+    </div>
+    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">TOTAL</div>
+      <div style="font-family:monospace;font-size:17px;font-weight:700">${fmt(total)}</div>
+      <div style="font-size:11px;color:#555;margin-top:2px">${monthlyDebts.length} ítem${monthlyDebts.length!==1?"s":""}</div>
+    </div>
+  </div>`;
+
+  if(monthlyDebts.length===0){
+    html+=`<div style="background:#16161e;border:1px solid #2a2a3a;border-radius:16px;padding:36px 20px;text-align:center;color:#444">
+      <div style="font-size:40px;margin-bottom:12px">📅</div>
+      Sin deudas del mes registradas.
+      <br><button onclick="openAddMonthlyModal()" style="margin-top:14px;background:#2a1a00;border:1px solid #4a3010;color:#f59e0b;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Agregar primera</button>
+    </div>`;
+  } else {
+    // Pending
+    if(pending.length>0){
+      html+=`<div style="font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:600">POR PAGAR</div>`;
+      pending.forEach((d,i)=>{
+        html+=`<div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideUp .25s ${i*.04}s cubic-bezier(.22,1,.36,1) both">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</div>
+            <div style="font-size:12px;color:#555;margin-top:3px">📅 ${d.categoria||"Otro"}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:monospace;font-weight:700;font-size:17px;color:#f59e0b">${fmt(d.amount)}</div>
+            <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+              <button onclick="markMonthlyPaid(${d.id})" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✓ Pagado</button>
+              <button onclick="deleteMonthlyDebt(${d.id})" style="background:#1e1e2e;color:#555;border:1px solid #2a2a3a;border-radius:8px;padding:6px 8px;font-size:14px;cursor:pointer">✕</button>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    // Paid
+    if(paid.length>0){
+      html+=`<div style="font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 8px;font-weight:600">PAGADAS ✓</div>`;
+      paid.forEach((d,i)=>{
+        html+=`<div style="background:#0d160d;border:1px solid #1a3020;border-radius:14px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;opacity:.7">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:14px;color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
+            <div style="font-size:12px;color:#3a6a3a;margin-top:2px">${d.categoria||"Otro"}</div>
+          </div>
+          <div style="font-family:monospace;font-size:15px;color:#4ade80">${fmt(d.amount)}</div>
+          <button onclick="deleteMonthlyDebt(${d.id})" style="background:none;border:none;color:#333;font-size:16px;cursor:pointer">✕</button>
+        </div>`;
+      });
+    }
+  }
+  el.innerHTML = html;
+}
+
+function openAddMonthlyModal(){
+  openModal("Nueva deuda del mes",
+    `<div class="modal-row"><label class="form-label">Nombre</label><input id="md-name" class="form-input" placeholder="Ej: Gastos comunes, Netflix…"/></div>
+    <div class="modal-row"><label class="form-label">Monto ($)</label><input id="md-amount" class="form-input" type="number" min="1" step="1" placeholder="0" style="font-family:monospace;font-size:18px"/></div>
+    <div class="modal-row"><label class="form-label">Categoría</label><select id="md-cat" class="form-input" style="color:#ccc">${MONTHLY_CATS.map(c=>`<option>${c}</option>`).join("")}</select></div>`,
+    "Agregar","primary","addMonthlyDebt",{}
+  );
+}
+
+function markMonthlyPaid(id){
+  monthlyDebts = monthlyDebts.map(d=>d.id===id?{...d,pagado:true}:d);
+  save("fin_monthly_debts",monthlyDebts); syncToCloud();
+  showToast("✓ Marcado como pagado");
+  renderMonthlyDebts(document.getElementById("content"));
+}
+
+function deleteMonthlyDebt(id){
+  monthlyDebts = monthlyDebts.filter(d=>d.id!==id);
+  save("fin_monthly_debts",monthlyDebts); syncToCloud();
+  showToast("Eliminado","err");
+  renderMonthlyDebts(document.getElementById("content"));
+}
+
 render();
 renderTicker();
 setTimeout(()=>{ const ls=document.getElementById("loading-screen"); if(ls){ ls.classList.add("fade-out"); setTimeout(()=>ls.remove(),500); } }, 1200);
