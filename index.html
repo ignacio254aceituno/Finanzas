@@ -1205,7 +1205,7 @@ function renderRegistros(el){
 async function fetchBankRecords(){
   const btn=document.getElementById("fintoc-sync-btn");
   const status=document.getElementById("fintoc-status");
-  if(API_URL==="PEGA_TU_URL_AQUI"){ status.textContent="Falta configurar Google Sheets"; return; }
+  if(API_URL==="https://script.google.com/macros/s/AKfycby-q_y3BNcQtnj3FeBg3k9JSj72kFkKkIaQd-HPZIFWZsSmzf3_TjSKLEqmZPfBKhX6/exec"){ status.textContent="Falta configurar Google Sheets"; return; }
   btn.disabled=true; btn.textContent="Actualizando...";
   status.textContent="";
   try{
