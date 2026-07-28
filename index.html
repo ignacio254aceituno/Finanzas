@@ -35,13 +35,16 @@
     .nav-add-inner { width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,#a78bfa,#6366f1); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#fff; box-shadow:0 4px 18px rgba(99,102,241,.4); transition:transform .15s; }
     .nav-add-btn:active .nav-add-inner { transform:scale(.92); }
 
-    .card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; }
+    .card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .card:active { transform:scale(.985); }
     @keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(.95); } to { opacity:1; transform:none; } }
     .section-label { font-size:11px; color:#555; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:600; }
 
-    #balance-card { border-radius:18px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; }
+    #balance-card { border-radius:18px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both, auroraShift 9s ease-in-out infinite; background-size:180% 180%; transition:transform .15s ease; }
+    #balance-card:active { transform:scale(.99); }
+    @keyframes auroraShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
     #balance-card .glow { position:absolute; top:-30px; right:-30px; width:140px; height:140px; border-radius:50%; pointer-events:none; }
     #balance-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
     #balance-amount { font-family:'DM Mono',monospace; font-size:34px; font-weight:700; letter-spacing:-.04em; margin-bottom:16px; }
@@ -82,10 +85,12 @@
     .submit-btn { width:100%; padding:16px; border-radius:14px; font-weight:700; font-size:17px; color:#fff; letter-spacing:-.01em; box-shadow:0 8px 24px rgba(0,0,0,.4); transition:transform .1s; }
     .submit-btn:active { transform:scale(.97); }
 
-    .hist-card { background:#16161e; border:1px solid #2a2a3a; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; }
+    .hist-card { background:#16161e; border:1px solid #2a2a3a; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .hist-card:active { transform:scale(.98); }
 
     /* SAVINGS */
-    .goal-card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; }
+    .goal-card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .goal-card:active { transform:scale(.98); }
     .goal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .goal-name { font-weight:700; font-size:15px; }
     .goal-progress-track { height:8px; border-radius:8px; background:#1e1e2e; margin-bottom:8px; overflow:hidden; }
@@ -98,7 +103,22 @@
     .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#1e1e2e; color:#555; border:1px solid #2a2a3a; }
 
     /* DEBTS */
-    .debt-card { border-radius:16px; padding:16px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; }
+    .debt-card { border-radius:16px; padding:16px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; transition:transform .15s ease; }
+    .debt-card:active { transform:scale(.98); }
+    .animated-list-scroll { max-height:420px; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#333 transparent; mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); -webkit-mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); padding-top:4px; }
+    .animated-list-scroll::-webkit-scrollbar { width:5px; }
+    .animated-list-scroll::-webkit-scrollbar-thumb { background:#333; border-radius:10px; }
+    .debt-card.list-focused { outline:2px solid #4ade80; outline-offset:2px; }
+    .monthly-stack-card { transition:transform .18s ease, filter .18s ease, opacity .18s ease; }
+    .gradual-blur-wrap { position:relative; height:480px; overflow:hidden; border-radius:14px; }
+    .gradual-blur-scroll { height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .gradual-blur-layers { position:absolute; left:0; right:0; bottom:0; height:7rem; pointer-events:none; z-index:3; }
+    .gradual-blur-layer { position:absolute; inset:0; }
+    .gradual-blur-layer:nth-child(1){ backdrop-filter:blur(1px); -webkit-backdrop-filter:blur(1px); mask-image:linear-gradient(to top, black 0%, transparent 20%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 20%); }
+    .gradual-blur-layer:nth-child(2){ backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); mask-image:linear-gradient(to top, black 0%, transparent 35%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 35%); }
+    .gradual-blur-layer:nth-child(3){ backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); mask-image:linear-gradient(to top, black 0%, transparent 55%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 55%); }
+    .gradual-blur-layer:nth-child(4){ backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); mask-image:linear-gradient(to top, black 0%, transparent 75%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 75%); }
+    .gradual-blur-layer:nth-child(5){ backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); mask-image:linear-gradient(to top, black 0%, transparent 100%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 100%); }
     .debt-check { width:28px; height:28px; border-radius:50%; border:2px solid #333; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; font-size:14px; }
     .debt-check.paid { background:#1a4030; border-color:#4ade80; }
     .debt-info { flex:1; min-width:0; }
@@ -431,6 +451,19 @@ let modalAction = null, modalData = {};
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function thisMonth(){ return new Date().toISOString().slice(0,7); }
 function fmt(n){ return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",minimumFractionDigits:0,maximumFractionDigits:0}).format(Math.round(n)); }
+function animateNumber(el,from,to,duration){
+  if(!el) return;
+  duration=duration||700;
+  const start=performance.now();
+  const diff=to-from;
+  function step(now){
+    const p=Math.min((now-start)/duration,1);
+    const eased=1-Math.pow(1-p,3);
+    el.textContent=fmt(from+diff*eased);
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 function fmtShort(n){ return Math.abs(n)>=1000?"$"+(n/1000).toFixed(1)+"k":"$"+Math.round(n); }
 function fmtDate(d){ return new Date(d+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }
 function monthLabel(o){ const d=new Date(); d.setMonth(d.getMonth()+o); return d.toLocaleDateString("es-MX",{month:"short"}).toUpperCase(); }
@@ -621,7 +654,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
     <div id="balance-label">Balance real (incluye deudas)</div>
-    <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(balance)}</div>
+    <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(0)}</div>
     <div class="balance-row" style="flex-wrap:wrap;gap:10px">
       <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
@@ -733,20 +766,36 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
     });
     const entries=Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
     const totalGasto=entries.reduce((s,[,v])=>s+v,0);
-    const colores=["#f87171","#fb923c","#facc15","#4ade80","#38bdf8","#818cf8","#f472b6","#94a3b8"];
+    const catStyle={
+      "Combustible":{color:"#fb923c",icon:"⛽"},
+      "Comida":{color:"#f87171",icon:"🍔"},
+      "Supermercado":{color:"#4ade80",icon:"🛒"},
+      "Transporte":{color:"#38bdf8",icon:"🚗"},
+      "Farmacia":{color:"#f472b6",icon:"💊"},
+      "Servicios":{color:"#818cf8",icon:"💡"},
+      "Ropa":{color:"#facc15",icon:"👕"},
+      "Entretenimiento":{color:"#c084fc",icon:"🎬"},
+      "Tecnología":{color:"#22d3ee",icon:"💻"},
+      "Salud":{color:"#fb7185",icon:"🏥"},
+      "Mascotas":{color:"#a3e635",icon:"🐾"},
+      "Hogar":{color:"#fbbf24",icon:"🏠"},
+      "Belleza":{color:"#e879f9",icon:"💄"},
+      "Sin categoría":{color:"#94a3b8",icon:"❔"}
+    };
+    const getStyle=cat=>catStyle[cat]||{color:"#94a3b8",icon:"•"};
     let acc=0;
-    const gradientParts=entries.map(([cat,val],i)=>{
+    const gradientParts=entries.map(([cat,val])=>{
       const start=(acc/totalGasto)*360; acc+=val;
       const end=(acc/totalGasto)*360;
-      return `${colores[i%colores.length]} ${start}deg ${end}deg`;
+      return `${getStyle(cat).color} ${start}deg ${end}deg`;
     });
     html+=`<div class="card" style="animation-delay:.2s">
       <div class="section-label">Gastos por categoría (Fintoc)</div>
       <div style="display:flex;align-items:center;gap:18px">
         <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${gradientParts.join(",")});flex-shrink:0"></div>
         <div style="flex:1;min-width:0">
-          ${entries.map(([cat,val],i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px">
-            <div style="width:9px;height:9px;border-radius:50%;background:${colores[i%colores.length]};flex-shrink:0"></div>
+          ${entries.map(([cat,val])=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px">
+            <span style="flex-shrink:0">${getStyle(cat).icon}</span>
             <span style="flex:1;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cat)}</span>
             <span style="font-family:'DM Mono',monospace;color:#888">${fmt(val)}</span>
           </div>`).join("")}
@@ -756,9 +805,8 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   }
 
   el.innerHTML=html;
+  animateNumber(document.getElementById("balance-amount"),0,balance);
 }
-
-// ── DEBTS VIEW ────────────────────────────────────────────
 function renderDebts(el){
   window.__lastDebtsEl = el;
   let html=`<div style="display:flex;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:4px;margin-bottom:14px;gap:4px">
@@ -822,6 +870,7 @@ function renderMyDebts(el){
     // Pending debts
     if(pending.length>0){
       html+=`<div class="section-label" style="margin-top:4px;margin-bottom:8px">POR PAGAR</div>`;
+      html+=`<div class="animated-list-scroll" id="debts-animated-list" tabindex="0">`;
       pending.sort((a,b)=>{
         const aOver=a.vencimiento&&a.vencimiento<todayStr();
         const bOver=b.vencimiento&&b.vencimiento<todayStr();
@@ -860,6 +909,7 @@ function renderMyDebts(el){
           </div>
         </div>`;
       });
+      html+=`</div>`;
     }
 
     // Paid debts
@@ -882,6 +932,25 @@ function renderMyDebts(el){
   }
 
   el.innerHTML=html;
+  setupAnimatedList();
+}
+
+function setupAnimatedList(){
+  const list=document.getElementById("debts-animated-list");
+  if(!list) return;
+  let focusIdx=-1;
+  const cards=()=>Array.from(list.querySelectorAll(".debt-card"));
+  list.addEventListener("keydown",e=>{
+    const items=cards();
+    if(!items.length) return;
+    if(e.key==="ArrowDown"){ e.preventDefault(); focusIdx=Math.min(focusIdx+1,items.length-1); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); focusIdx=Math.max(focusIdx-1,0); }
+    else if(e.key==="Enter"&&focusIdx>=0){ items[focusIdx].click(); return; }
+    else return;
+    items.forEach(c=>c.classList.remove("list-focused"));
+    items[focusIdx].classList.add("list-focused");
+    items[focusIdx].scrollIntoView({block:"nearest",behavior:"smooth"});
+  });
 }
 
 function renderReceivables(el){
@@ -1271,7 +1340,8 @@ function renderRegistros(el){
   if(sorted.length===0){
     html+=`<div class="card"><div class="empty"><div class="empty-icon">🏦</div>Aún no hay movimientos bancarios cargados.<br><span style="font-size:12px;color:#555">Toca "Actualizar movimientos" para traer los más recientes.</span></div></div>`;
   } else {
-    html+=`<div class="section-label" style="margin-bottom:8px">${sorted.length} MOVIMIENTOS</div><div style="display:flex;flex-direction:column;gap:8px">`;
+    html+=`<div class="section-label" style="margin-bottom:8px">${sorted.length} MOVIMIENTOS</div>`;
+    html+=`<section class="gradual-blur-wrap"><div class="gradual-blur-scroll" style="display:flex;flex-direction:column;gap:8px;padding-bottom:6rem">`;
     sorted.forEach(r=>{
       const isIn=r.monto>0;
       html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:12px 14px;gap:10px">
@@ -1282,7 +1352,15 @@ function renderRegistros(el){
         <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:${isIn?"#4ade80":"#f87171"};flex-shrink:0">${isIn?"+":""}${fmt(r.monto)}</div>
       </div>`;
     });
-    html+=`</div>`;
+    html+=`</div>
+    <div class="gradual-blur-layers">
+      <div class="gradual-blur-layer"></div>
+      <div class="gradual-blur-layer"></div>
+      <div class="gradual-blur-layer"></div>
+      <div class="gradual-blur-layer"></div>
+      <div class="gradual-blur-layer"></div>
+    </div>
+    </section>`;
   }
   el.innerHTML=html;
 }
@@ -1717,7 +1795,7 @@ function renderMonthlyDebts(el){
     if(pending.length>0){
       html+=`<div style="font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:600">POR PAGAR</div>`;
       pending.forEach((d,i)=>{
-        html+=`<div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideUp .25s ${i*.04}s cubic-bezier(.22,1,.36,1) both">
+        html+=`<div class="monthly-stack-card" style="position:sticky;top:${70+i*20}px;z-index:${i+1};background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideUp .25s ${i*.04}s cubic-bezier(.22,1,.36,1) both">
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</div>
             <div style="font-size:12px;color:#555;margin-top:3px">📅 ${d.categoria||"Otro"}</div>
@@ -1748,6 +1826,32 @@ function renderMonthlyDebts(el){
     }
   }
   el.innerHTML = html;
+  setupMonthlyScrollStack();
+}
+
+function setupMonthlyScrollStack(){
+  const container=document.getElementById("content");
+  const cards=Array.from(container.querySelectorAll(".monthly-stack-card"));
+  if(!cards.length) return;
+  function update(){
+    for(let i=0;i<cards.length-1;i++){
+      const a=cards[i].getBoundingClientRect();
+      const b=cards[i+1].getBoundingClientRect();
+      const overlap=a.bottom-b.top;
+      if(overlap>0){
+        const p=Math.min(1,overlap/60);
+        cards[i].style.transform=`scale(${1-p*0.04})`;
+        cards[i].style.filter=`blur(${(p*1.5).toFixed(2)}px)`;
+        cards[i].style.opacity=`${1-p*0.15}`;
+      } else {
+        cards[i].style.transform="";
+        cards[i].style.filter="";
+        cards[i].style.opacity="";
+      }
+    }
+  }
+  container.addEventListener("scroll",()=>requestAnimationFrame(update),{passive:true});
+  update();
 }
 
 function openAddMonthlyModal(){
