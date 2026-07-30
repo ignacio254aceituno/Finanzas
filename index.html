@@ -35,8 +35,24 @@
     .nav-add-inner { width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,#a78bfa,#6366f1); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#fff; box-shadow:0 4px 18px rgba(99,102,241,.4); transition:transform .15s; }
     .nav-add-btn:active .nav-add-inner { transform:scale(.92); }
 
+    #bg-particles { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+    #loading-screen, #lock-screen, #header, #content, nav#nav, #modal-overlay, #toast { position:relative; z-index:1; }
+
     .card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .card:active { transform:scale(.985); }
+    .debt-card, .receivable-card { transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease; }
+    .debt-card:active, .receivable-card:active { transform:scale(.97); }
+    .select-pulse { animation:selectPulse .45s cubic-bezier(.22,1,.36,1); }
+    @keyframes selectPulse {
+      0%   { box-shadow:0 0 0 0 rgba(74,222,128,.55); }
+      60%  { box-shadow:0 0 0 14px rgba(74,222,128,0); }
+      100% { box-shadow:0 0 0 0 rgba(74,222,128,0); }
+    }
+    .view-enter { animation:viewEnter .38s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes viewEnter {
+      from { opacity:0; transform:translateY(10px) scale(.985); filter:blur(3px); }
+      to   { opacity:1; transform:none; filter:blur(0); }
+    }
     @keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(.95); } to { opacity:1; transform:none; } }
@@ -274,6 +290,8 @@
 </head>
 <body>
 
+<canvas id="bg-particles"></canvas>
+
 <div id="loading-screen">
   <div id="rise-particles">
     <span class="particle" style="left:38%; background:#a3c46a; animation-duration:1.6s; animation-delay:.1s;"></span>
@@ -435,6 +453,7 @@ let monthlyDebts = load("fin_monthly_debts",[]); // {id, name, amount, categoria
 let receivables  = load("fin_receivables",[]); // {id, name, total, paid, nota, vencimiento, cobros}
 let customCats   = load("fin_custom_cats",{ingreso:[],gasto:[]}); // {ingreso:[{name,icon}], gasto:[{name,icon}]}
 let bankRecords  = load("fin_bank_records",[]); // movimientos reales traídos de Fintoc (solo lectura desde la app)
+let bankAccounts = load("fin_bank_accounts",[]); // saldos reales de cuentas/tarjetas traídos de Fintoc
 let debtsSubTab  = "debo"; // "debo" | "medeben"
 
 function getCats(tipo){ return [...CATS[tipo], ...customCats[tipo].map(c=>c.name)]; }
@@ -591,6 +610,8 @@ function setView(v){
   if(nb) nb.classList.add("active");
   document.getElementById("content").scrollTop=0;
   render();
+  const c=document.getElementById("content");
+  c.classList.remove('view-enter'); void c.offsetWidth; c.classList.add('view-enter');
 }
 
 // STATS
@@ -640,6 +661,31 @@ function render(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
+function buildCardsListInicio(){
+  const cardsSummary=getCardsSummary();
+  if(cardsSummary.length===0) return "";
+  const rows=cardsSummary.map((c,i)=>{
+    const style=bankStyle(c.cuenta);
+    const tieneSaldo=c.disponible!=null && !isNaN(c.disponible);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;${i<cardsSummary.length-1?"border-bottom:1px solid #22222e":""}">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <div style="width:42px;height:42px;border-radius:10px;background:${style.bg};display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${style.icon}</div>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${esc(c.cuenta)}</div>
+          <div style="font-size:11px;color:#666">${c.cuotas>0?`En cuotas: ${fmt(c.cuotas)}`:tieneSaldo?`Gastado: ${fmt(c.gastado)}`:"Gastado este mes"}</div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:9px;color:#555;letter-spacing:.03em">${tieneSaldo?"DISPONIBLE":"GASTADO"}</div>
+        <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:15px;color:${tieneSaldo?"#4ade80":"#f87171"}">${tieneSaldo?fmt(c.disponible):fmt(c.gastado)}</div>
+      </div>
+    </div>`;
+  }).join("");
+  return `<div class="card" style="animation-delay:.01s">
+    <div class="section-label">Tus tarjetas</div>
+    ${rows}
+  </div>`;
+}
 function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   const positive=balance>=0;
   const total=totalIn+totalOut;
@@ -667,6 +713,8 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
       <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
+
+  html+=buildCardsListInicio();
 
   // Diferencia real: Ingresos vs TODAS las deudas pendientes (pagadas o no)
   const allDebtTotal = debts.reduce((s,d)=>s+(d.total-d.paid),0);
@@ -783,29 +831,54 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
       "Sin categoría":{color:"#94a3b8",icon:"❔"}
     };
     const getStyle=cat=>catStyle[cat]||{color:"#94a3b8",icon:"•"};
-    let acc=0;
-    const gradientParts=entries.map(([cat,val])=>{
-      const start=(acc/totalGasto)*360; acc+=val;
-      const end=(acc/totalGasto)*360;
-      return `${getStyle(cat).color} ${start}deg ${end}deg`;
-    });
     html+=`<div class="card" style="animation-delay:.2s">
       <div class="section-label">Gastos por categoría (Fintoc)</div>
-      <div style="display:flex;align-items:center;gap:18px">
-        <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${gradientParts.join(",")});flex-shrink:0"></div>
-        <div style="flex:1;min-width:0">
-          ${entries.map(([cat,val])=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px">
-            <span style="flex-shrink:0">${getStyle(cat).icon}</span>
-            <span style="flex:1;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cat)}</span>
-            <span style="font-family:'DM Mono',monospace;color:#888">${fmt(val)}</span>
-          </div>`).join("")}
-        </div>
-      </div>
+      ${buildKaneDonut(entries,totalGasto,getStyle)}
     </div>`;
   }
 
   el.innerHTML=html;
   animateNumber(document.getElementById("balance-amount"),0,balance);
+}
+function buildKaneDonut(entries,totalGasto,getStyle){
+  const CX=150,CY=150,R=85,STROKE=22,GAP=5;
+  const circumference=2*Math.PI*R;
+  const top=entries.slice(0,4);
+  const rest=entries.slice(4);
+  const restVal=rest.reduce((s,[,v])=>s+v,0);
+  const items=[...top];
+  if(rest.length) items.push(["Otros",restVal]);
+  const SLOT_ANGLES=[-135,-45,135,45,90];
+  const SLOTS=[{x:36,y:74,align:"left"},{x:264,y:74,align:"right"},{x:36,y:232,align:"left"},{x:264,y:232,align:"right"},{x:150,y:272,align:"center"}];
+  let cum=0, segs="", labels="";
+  items.forEach(([cat,val],i)=>{
+    const frac=val/totalGasto;
+    const len=frac*circumference;
+    const dash=Math.max(len-GAP,0);
+    const offset=-cum;
+    const style=getStyle(cat);
+    segs+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${style.color}" stroke-width="${STROKE}" stroke-dasharray="${dash.toFixed(1)} ${(circumference-dash).toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 ${CX} ${CY})"/>`;
+    cum+=len;
+    const slot=SLOTS[i], ang=SLOT_ANGLES[i]*Math.PI/180;
+    const lx1=CX+(R+STROKE/2+2)*Math.cos(ang), ly1=CY+(R+STROKE/2+2)*Math.sin(ang);
+    const pct=Math.round(frac*100);
+    const boxW=108,boxH=38;
+    const bx=slot.align==="left"?slot.x:slot.align==="right"?slot.x-boxW:slot.x-boxW/2;
+    const by=slot.y-boxH/2;
+    const justify=slot.align==="left"?"flex-start":slot.align==="right"?"flex-end":"center";
+    labels+=`<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${slot.x}" y2="${slot.y}" stroke="#33334a" stroke-width="1.3"/>`;
+    labels+=`<foreignObject x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${boxW}" height="${boxH}">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${justify};font-family:inherit">
+        <div style="display:flex;align-items:center;gap:5px;background:${style.color}22;border:1px solid ${style.color}66;color:${style.color};border-radius:20px;padding:4px 9px;font-size:10px;font-weight:800;white-space:nowrap;max-width:${boxW}px;overflow:hidden;text-overflow:ellipsis">
+          <span>${style.icon}</span><span style="text-transform:uppercase">${esc(cat)}</span>
+        </div>
+        <div style="font-size:10px;color:#777;margin-top:3px">(${pct}%)</div>
+      </div>
+    </foreignObject>`;
+  });
+  return `<div style="width:100%;max-width:320px;margin:6px auto 0">
+    <svg viewBox="0 0 300 300" style="width:100%;height:auto;overflow:visible">${segs}${labels}</svg>
+  </div>`;
 }
 function renderDebts(el){
   window.__lastDebtsEl = el;
@@ -1062,7 +1135,7 @@ function askDeleteReceivable(id){
 }
 
 function toggleDebtCard(card){
-
+  card.classList.remove('select-pulse'); void card.offsetWidth; card.classList.add('select-pulse');
   const isSelected = card.dataset.selected === "1";
   const checkbox = card.querySelector(".debt-checkbox");
   if(isSelected){
@@ -1328,6 +1401,37 @@ function renderCategorias(el){
   el.innerHTML=html;
 }
 
+function getCardsSummary(){
+  const map={};
+  bankRecords.forEach(r=>{
+    const cuenta=r.cuenta||"Cuenta";
+    if(!map[cuenta]) map[cuenta]={cuenta,gastado:0,cuotas:0};
+    if(r.monto<0){
+      const abs=Math.abs(r.monto);
+      map[cuenta].gastado+=abs;
+      if(/cuota|\b\d{1,2}\s*\/\s*\d{1,2}\b/i.test(r.descripcion||"")) map[cuenta].cuotas+=abs;
+    }
+  });
+  bankAccounts.forEach(a=>{
+    if(!map[a.cuenta]) map[a.cuenta]={cuenta:a.cuenta,gastado:0,cuotas:0};
+    map[a.cuenta].disponible=a.disponible;
+    map[a.cuenta].cupo=a.cupo;
+    map[a.cuenta].tipo=a.tipo;
+  });
+  return Object.values(map).sort((a,b)=>(b.disponible||0)-(a.disponible||0)||b.gastado-a.gastado);
+}
+function bankStyle(name){
+  const n=(name||"").toLowerCase();
+  if(n.includes("chile")) return{bg:"linear-gradient(135deg,#1e5fbf,#0f3d8a)",icon:"🏦"};
+  if(n.includes("scotia")) return{bg:"linear-gradient(135deg,#e01030,#7a0b1f)",icon:"🔴"};
+  if(n.includes("santander")) return{bg:"linear-gradient(135deg,#ec0000,#7a0000)",icon:"🔥"};
+  if(n.includes("bci")) return{bg:"linear-gradient(135deg,#0077c8,#004b87)",icon:"💳"};
+  if(n.includes("estado")) return{bg:"linear-gradient(135deg,#2e2e4a,#15152a)",icon:"🏛️"};
+  if(n.includes("itau")||n.includes("itaú")) return{bg:"linear-gradient(135deg,#f5a623,#c76e00)",icon:"🟠"};
+  if(n.includes("falabella")||n.includes("cmr")) return{bg:"linear-gradient(135deg,#2d9d56,#1a5d31)",icon:"🛍️"};
+  if(n.includes("ripley")) return{bg:"linear-gradient(135deg,#e4032e,#7a0018)",icon:"🛒"};
+  return{bg:"linear-gradient(135deg,#3a3a5a,#1e1e2e)",icon:"💳"};
+}
 function renderRegistros(el){
   const sorted=[...bankRecords].sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
   let html=`
@@ -1377,6 +1481,11 @@ async function fetchBankRecords(){
       const rows=await getSheet("Registros");
       if(rows.length>1) bankRecords=rows.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]}));
       save("fin_bank_records",bankRecords);
+      try{
+        const accRows=await getSheet("Cuentas");
+        if(accRows.length>1) bankAccounts=accRows.slice(1).map(row=>({cuenta:row[0],disponible:Number(row[1]),actual:Number(row[2]),cupo:Number(row[3]),tipo:row[4]}));
+        save("fin_bank_accounts",bankAccounts);
+      }catch(e){}
       status.textContent=`✓ ${bankRecords.length} movimientos actualizados`;
       render();
     } else {
@@ -1882,6 +1991,54 @@ renderTicker();
 setTimeout(()=>{ const ls=document.getElementById("loading-screen"); if(ls) ls.classList.add("phase2"); }, 2800);
 setTimeout(()=>{ const ls=document.getElementById("loading-screen"); if(ls){ ls.classList.add("fade-out"); setTimeout(()=>ls.remove(),500); } }, 5000);
 checkDailyReminder();
+// ===== FONDO DE PARTÍCULAS BRILLANTES CON TOUCH =====
+(function(){
+  const canvas=document.getElementById('bg-particles');
+  const ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  const N=70;
+  const pointer={x:-9999,y:-9999,active:false};
+  function resize(){ W=canvas.width=innerWidth; H=canvas.height=innerHeight; }
+  resize(); addEventListener('resize',resize);
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+  function makeParticle(){
+    return { x:rnd(0,W), y:rnd(0,H), ox:0, oy:0, r:rnd(.6,2.2), vx:rnd(-.08,.08), vy:rnd(-.08,.08), a:rnd(.25,.85), tw:rnd(0,Math.PI*2) };
+  }
+  for(let i=0;i<N;i++) particles.push(makeParticle());
+  function setPointer(x,y){ pointer.x=x; pointer.y=y; pointer.active=true; }
+  function clearPointer(){ pointer.active=false; }
+  window.addEventListener('pointermove',e=>setPointer(e.clientX,e.clientY),{passive:true});
+  window.addEventListener('pointerdown',e=>setPointer(e.clientX,e.clientY),{passive:true});
+  window.addEventListener('touchmove',e=>{ if(e.touches[0]) setPointer(e.touches[0].clientX,e.touches[0].clientY); },{passive:true});
+  window.addEventListener('pointerleave',clearPointer,{passive:true});
+  window.addEventListener('touchend',clearPointer,{passive:true});
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of particles){
+      p.x+=p.vx; p.y+=p.vy; p.tw+=.02;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      if(pointer.active){
+        const dx=p.x-pointer.x, dy=p.y-pointer.y;
+        const dist=Math.hypot(dx,dy), rad=110;
+        if(dist<rad && dist>0.001){
+          const f=(rad-dist)/rad*2.2;
+          p.ox+=(dx/dist)*f; p.oy+=(dy/dist)*f;
+        }
+      }
+      p.ox*=.9; p.oy*=.9;
+      const drawX=p.x+p.ox, drawY=p.y+p.oy;
+      const flicker=.5+.5*Math.sin(p.tw);
+      ctx.beginPath();
+      ctx.arc(drawX,drawY,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(167,139,250,${(p.a*flicker*0.9).toFixed(3)})`;
+      ctx.shadowColor='rgba(167,139,250,.9)';
+      ctx.shadowBlur=6;
+      ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
 </script>
 </body>
 </html>
