@@ -287,6 +287,7 @@
       100% { transform:translate(calc(var(--dx,20px)*1.6),-40px) rotate(520deg); opacity:0; }
     }
 </style>
+<script src="https://js.fintoc.com/v1/"></script>
 </head>
 <body>
 
@@ -661,26 +662,52 @@ function render(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
+function tipoLabel(tipo){
+  return{checking_account:"Cuenta Corriente",savings_account:"Cuenta de Ahorro",sight_account:"Cuenta Vista",
+    line_of_credit:"Línea de Crédito",credit_card:"Tarjeta de Crédito"}[tipo]||"Cuenta";
+}
+function buildBigCard(c){
+  const style=bankStyle(c.banco||c.cuenta);
+  const esCredito=(c.tipo||"")==="credit_card";
+  const montoPrincipal=esCredito?(c.cupo!=null&&!isNaN(c.cupo)?c.cupo:c.disponible):c.disponible;
+  const tieneMonto=montoPrincipal!=null && !isNaN(montoPrincipal);
+  const label=esCredito?"CUPO DISPONIBLE":"DISPONIBLE";
+  const ult4=c.numero?String(c.numero).slice(-4):"••••";
+  return `<div style="display:flex;align-items:center;gap:14px;padding:10px 0">
+    <div style="width:148px;height:92px;border-radius:14px;background:${style.bg};padding:12px 13px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="font-size:12.5px;font-weight:800;color:#fff;letter-spacing:.01em;z-index:1">${esc(c.banco||c.cuenta)}</div>
+      <div style="z-index:1">
+        <div style="font-size:8.5px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">${tipoLabel(c.tipo)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.06em">•••• ${ult4}</div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:9.5px;color:#666;letter-spacing:.04em">${tieneMonto?label:"GASTADO ESTE MES"}</div>
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:${tieneMonto?"#4ade80":"#f87171"};margin-bottom:5px">${tieneMonto?fmt(montoPrincipal):fmt(c.gastado)}</div>
+      ${esCredito?`<div style="font-size:10.5px;color:#888">Gastado: ${fmt(c.gastado)}${c.cuotas>0?` · Cuotas: ${fmt(c.cuotas)}`:""}</div>`:""}
+    </div>
+  </div>`;
+}
 function buildCardsListInicio(){
   const cardsSummary=getCardsSummary();
-  if(cardsSummary.length===0) return "";
-  const rows=cardsSummary.map((c,i)=>{
-    const style=bankStyle(c.cuenta);
-    const tieneSaldo=c.disponible!=null && !isNaN(c.disponible);
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;${i<cardsSummary.length-1?"border-bottom:1px solid #22222e":""}">
-      <div style="display:flex;align-items:center;gap:12px;min-width:0">
-        <div style="width:42px;height:42px;border-radius:10px;background:${style.bg};display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${style.icon}</div>
-        <div style="min-width:0">
-          <div style="font-size:13px;font-weight:700;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${esc(c.cuenta)}</div>
-          <div style="font-size:11px;color:#666">${c.cuotas>0?`En cuotas: ${fmt(c.cuotas)}`:tieneSaldo?`Gastado: ${fmt(c.gastado)}`:"Gastado este mes"}</div>
-        </div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:9px;color:#555;letter-spacing:.03em">${tieneSaldo?"DISPONIBLE":"GASTADO"}</div>
-        <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:15px;color:${tieneSaldo?"#4ade80":"#f87171"}">${tieneSaldo?fmt(c.disponible):fmt(c.gastado)}</div>
-      </div>
-    </div>`;
-  }).join("");
+  const deposito=cardsSummary.filter(c=>(c.tipo||"")!=="credit_card");
+  const credito=cardsSummary.filter(c=>(c.tipo||"")==="credit_card");
+  let rows="";
+  if(deposito.length){
+    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:2px 0 4px">CUENTAS DE DEPÓSITO</div>`;
+    rows+=deposito.map(buildBigCard).join(`<div style="height:1px;background:#22222e;margin:2px 0"></div>`);
+  }
+  if(credito.length){
+    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:${deposito.length?"14px":"2px"} 0 4px">TARJETAS DE CRÉDITO</div>`;
+    rows+=credito.map(buildBigCard).join(`<div style="height:1px;background:#22222e;margin:2px 0"></div>`);
+  }
+  rows+=`<div onclick="abrirFintocWidget()" style="display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer;margin-top:${cardsSummary.length?"6px":"2px"}">
+    <div style="width:148px;height:92px;border-radius:14px;border:2px dashed #333;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="font-size:26px;color:#555;line-height:1">+</span>
+    </div>
+    <div style="font-size:13px;color:#999;font-weight:700">Agregar banco o tarjeta</div>
+  </div>`;
   return `<div class="card" style="animation-delay:.01s">
     <div class="section-label">Tus tarjetas</div>
     ${rows}
@@ -1414,9 +1441,11 @@ function getCardsSummary(){
   });
   bankAccounts.forEach(a=>{
     if(!map[a.cuenta]) map[a.cuenta]={cuenta:a.cuenta,gastado:0,cuotas:0};
+    map[a.cuenta].banco=a.banco;
+    map[a.cuenta].tipo=a.tipo;
+    map[a.cuenta].numero=a.numero;
     map[a.cuenta].disponible=a.disponible;
     map[a.cuenta].cupo=a.cupo;
-    map[a.cuenta].tipo=a.tipo;
   });
   return Object.values(map).sort((a,b)=>(b.disponible||0)-(a.disponible||0)||b.gastado-a.gastado);
 }
@@ -1430,6 +1459,13 @@ function bankStyle(name){
   if(n.includes("itau")||n.includes("itaú")) return{bg:"linear-gradient(135deg,#f5a623,#c76e00)",icon:"🟠"};
   if(n.includes("falabella")||n.includes("cmr")) return{bg:"linear-gradient(135deg,#2d9d56,#1a5d31)",icon:"🛍️"};
   if(n.includes("ripley")) return{bg:"linear-gradient(135deg,#e4032e,#7a0018)",icon:"🛒"};
+  if(n.includes("bice")) return{bg:"linear-gradient(135deg,#f5c518,#b8930a)",icon:"🟡"};
+  if(n.includes("security")) return{bg:"linear-gradient(135deg,#1a3a6e,#0d1f3d)",icon:"🔒"};
+  if(n.includes("consorcio")) return{bg:"linear-gradient(135deg,#00857a,#004d47)",icon:"🟢"};
+  if(n.includes("coopeuch")) return{bg:"linear-gradient(135deg,#e07a00,#8a4a00)",icon:"🤝"};
+  if(n.includes("internacional")) return{bg:"linear-gradient(135deg,#5a3a8a,#2e1a4d)",icon:"🌐"};
+  if(n.includes("hsbc")) return{bg:"linear-gradient(135deg,#db0011,#7a0009)",icon:"🌍"};
+  if(n.includes("mercado pago")||n.includes("mercadopago")) return{bg:"linear-gradient(135deg,#00b1ea,#0088b8)",icon:"💙"};
   return{bg:"linear-gradient(135deg,#3a3a5a,#1e1e2e)",icon:"💳"};
 }
 function renderRegistros(el){
@@ -1472,9 +1508,9 @@ function renderRegistros(el){
 async function fetchBankRecords(){
   const btn=document.getElementById("fintoc-sync-btn");
   const status=document.getElementById("fintoc-status");
-  if(API_URL==="https://script.google.com/macros/s/AKfycby-q_y3BNcQtnj3FeBg3k9JSj72kFkKkIaQd-HPZIFWZsSmzf3_TjSKLEqmZPfBKhX6/exec"){ status.textContent="Falta configurar Google Sheets"; return; }
-  btn.disabled=true; btn.textContent="Actualizando...";
-  status.textContent="";
+  if(API_URL==="https://script.google.com/macros/s/AKfycby-q_y3BNcQtnj3FeBg3k9JSj72kFkKkIaQd-HPZIFWZsSmzf3_TjSKLEqmZPfBKhX6/exec"){ if(status) status.textContent="Falta configurar Google Sheets"; return; }
+  if(btn){ btn.disabled=true; btn.textContent="Actualizando..."; }
+  if(status) status.textContent="";
   try{
     const d=await postToScript({action:"fintocSync"});
     if(d.status==="ok"){
@@ -1483,18 +1519,49 @@ async function fetchBankRecords(){
       save("fin_bank_records",bankRecords);
       try{
         const accRows=await getSheet("Cuentas");
-        if(accRows.length>1) bankAccounts=accRows.slice(1).map(row=>({cuenta:row[0],disponible:Number(row[1]),actual:Number(row[2]),cupo:Number(row[3]),tipo:row[4]}));
+        if(accRows.length>1) bankAccounts=accRows.slice(1).map(row=>({cuenta:row[0],banco:row[1],numero:row[2],tipo:row[3],disponible:Number(row[4]),actual:Number(row[5]),cupo:Number(row[6])}));
         save("fin_bank_accounts",bankAccounts);
       }catch(e){}
-      status.textContent=`✓ ${bankRecords.length} movimientos actualizados`;
+      if(status) status.textContent=`✓ ${bankRecords.length} movimientos actualizados`;
       render();
     } else {
-      status.textContent=d.message||"No se pudo conectar con el banco";
+      if(status) status.textContent=d.message||"No se pudo conectar con el banco";
+      else showToast(d.message||"No se pudo conectar con el banco","err");
     }
   }catch(e){
-    status.textContent="Error de conexión, intenta de nuevo";
+    if(status) status.textContent="Error de conexión, intenta de nuevo";
+    else showToast("Error de conexión, intenta de nuevo","err");
   }
-  btn.disabled=false; btn.textContent="🔄 Actualizar movimientos";
+  if(btn){ btn.disabled=false; btn.textContent="🔄 Actualizar movimientos"; }
+}
+
+async function abrirFintocWidget(){
+  if(typeof Fintoc==="undefined"){ showToast("No se pudo cargar el conector de Fintoc","err"); return; }
+  showToast("Abriendo conexión con tu banco...");
+  try{
+    const d=await postToScript({action:"fintocCreateLinkIntent"});
+    if(d.status!=="ok"){ showToast(d.message||"No se pudo iniciar la conexión","err"); return; }
+    const widget=Fintoc.create({
+      publicKey:d.publicKey,
+      widgetToken:d.widgetToken,
+      product:"movements",
+      country:"cl",
+      onSuccess:async(linkIntent)=>{
+        showToast("Confirmando conexión...");
+        const r=await postToScript({action:"fintocSaveLink",exchangeToken:linkIntent.exchangeToken});
+        if(r.status==="ok"){
+          showToast(`✓ ${r.banco} conectado`);
+          await fetchBankRecords();
+        } else {
+          showToast(r.message||"No se pudo guardar la conexión","err");
+        }
+      },
+      onExit:()=>{}
+    });
+    widget.open();
+  }catch(e){
+    showToast("Error al abrir el widget de Fintoc","err");
+  }
 }
 
 function openAddCategoryModal(){
