@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conectar banco — Zynto</title>
+<script src="https://js.fintoc.com/v1/"></script>
+<style>
+  :root{ color-scheme: dark; }
+  body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+        background:#0a0a0f; color:#f0f0f5; font-family:-apple-system,system-ui,sans-serif; padding:24px; box-sizing:border-box; }
+  .box{ max-width:420px; text-align:center; }
+  .logo{ font-size:26px; font-weight:800; margin-bottom:18px; }
+  .logo b{ color:#a3c46a; }
+  .msg{ font-size:15px; color:#ccc; line-height:1.5; margin-bottom:22px; }
+  .spinner{ width:34px; height:34px; border-radius:50%; border:3px solid #2a2a3a; border-top-color:#a78bfa;
+            animation:spin 1s linear infinite; margin:0 auto 18px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .ok{ color:#4ade80; font-size:40px; margin-bottom:10px; }
+  .err{ color:#f87171; font-size:40px; margin-bottom:10px; }
+  button{ background:#a78bfa; color:#0a0a0f; font-weight:800; border:none; border-radius:10px;
+          padding:13px 22px; font-size:15px; cursor:pointer; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">Z<b>y</b>nto</div>
+    <div id="state">
+      <div class="spinner"></div>
+      <div class="msg" id="msg">Conectando con tu banco...</div>
+    </div>
+  </div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwgwTGJMUlFUS2jIf8-Ew8rlVUiR0UNE9i20rE-kFDRI2ELnEVI3k2Wsi73UVWlXQLr/exec";
+const APP_SECRET = "Cacaflow123$";
+
+async function postToScript(payload){
+  const r = await fetch(API_URL, { method:"POST", body: JSON.stringify({ ...payload, secret: APP_SECRET }) });
+  return r.json();
+}
+
+function show(html){ document.getElementById("state").innerHTML = html; }
+
+function getParam(name){ return new URLSearchParams(location.search).get(name); }
+
+async function init(){
+  const widgetToken = getParam("widgetToken");
+  const publicKey = getParam("publicKey");
+  const ns = getParam("ns") || "";
+
+  if(!widgetToken || !publicKey){
+    show(`<div class="err">⚠️</div><div class="msg">Faltan datos para conectar. Vuelve a la app e inténtalo de nuevo desde "Agregar banco".</div>`);
+    return;
+  }
+
+  const waitForFintoc = () => new Promise(resolve=>{
+    if(typeof Fintoc!=="undefined"){ resolve(true); return; }
+    const start=Date.now();
+    const iv=setInterval(()=>{
+      if(typeof Fintoc!=="undefined"){ clearInterval(iv); resolve(true); }
+      else if(Date.now()-start>4000){ clearInterval(iv); resolve(false); }
+    },200);
+  });
+
+  const available = await waitForFintoc();
+  if(!available){
+    show(`<div class="err">⚠️</div><div class="msg">No se pudo cargar el conector de Fintoc. Revisa tu conexión e inténtalo de nuevo.</div>`);
+    return;
+  }
+
+  const widget = Fintoc.create({
+    publicKey,
+    widgetToken,
+    product: "movements",
+    country: "cl",
+    onSuccess: async (linkIntent) => {
+      show(`<div class="spinner"></div><div class="msg">Confirmando conexión...</div>`);
+      try{
+        const r = await postToScript({ action:"fintocSaveLink", exchangeToken: linkIntent.exchangeToken, ns });
+        if(r.status==="ok"){
+          show(`<div class="ok">✓</div><div class="msg"><b>${r.banco||"Banco"} conectado correctamente.</b><br><br>Ya puedes cerrar esta pestaña y volver a Zynto. Toca 🔄 para actualizar tus movimientos.</div>`);
+        } else {
+          show(`<div class="err">⚠️</div><div class="msg">${r.message||"No se pudo guardar la conexión."}</div>`);
+        }
+      }catch(e){
+        show(`<div class="err">⚠️</div><div class="msg">Se conectó el banco pero no se pudo confirmar. Vuelve a la app y toca 🔄 Actualizar.</div>`);
+      }
+    },
+    onExit: () => {
+      show(`<div class="msg">Conexión cancelada. Puedes cerrar esta pestaña y volver a Zynto.</div>`);
+    },
+    onError: () => {
+      show(`<div class="err">⚠️</div><div class="msg">El banco rechazó la conexión. Cierra esta pestaña, vuelve a la app e inténtalo de nuevo.</div>`);
+    }
+  });
+  widget.open();
+}
+init();
+</script>
+</body>
+</html>
