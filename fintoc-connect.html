@@ -45,14 +45,21 @@ function show(html){ document.getElementById("state").innerHTML = html; }
 function getParam(name){ return new URLSearchParams(location.search).get(name); }
 
 async function init(){
-  const widgetToken = getParam("widgetToken");
-  const publicKey = getParam("publicKey");
   const ns = getParam("ns") || "";
 
-  if(!widgetToken || !publicKey){
-    show(`<div class="err">⚠️</div><div class="msg">Faltan datos para conectar. Vuelve a la app e inténtalo de nuevo desde "Agregar banco".</div>`);
+  show(`<div class="spinner"></div><div class="msg">Preparando conexión...</div>`);
+  let widgetToken, publicKey;
+  try{
+    const d = await postToScript({action:"fintocCreateLinkIntent", ns});
+    if(d.status!=="ok") throw new Error(d.message||"No se pudo iniciar la conexión");
+    widgetToken = d.widgetToken;
+    publicKey = d.publicKey;
+  }catch(e){
+    show(`<div class="err">⚠️</div><div class="msg">${(e&&e.message)||"No se pudo iniciar la conexión con el banco"}. Vuelve a la app e inténtalo de nuevo desde "Agregar banco".</div>`);
     return;
   }
+
+  show(`<div class="spinner"></div><div class="msg">Conectando con tu banco...</div>`);
 
   const waitForFintoc = () => new Promise(resolve=>{
     if(typeof Fintoc!=="undefined"){ resolve(true); return; }
