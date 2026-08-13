@@ -1947,33 +1947,17 @@ async function abrirFintocWidget(){
   const isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
 
   if(isStandalone){
-    // IMPORTANTE: abrir la pestaña ANTES del await, si no Safari en iOS la bloquea
-    // por no considerarla parte directa del toque del usuario.
-    const newTab = window.open("", "_blank");
-    try{
-      const d=await postToScript({action:"fintocCreateLinkIntent",ns:ns_()});
-      if(d.status!=="ok"){
-        setConnecting(false);
-        if(newTab) newTab.close();
-        showToast(d.message||"No se pudo iniciar la conexión con el banco","err");
-        return;
-      }
-      const url = new URL("fintoc-connect.html", location.href);
-      url.searchParams.set("widgetToken", d.widgetToken);
-      url.searchParams.set("publicKey", d.publicKey);
-      url.searchParams.set("ns", ns_());
-      if(newTab){
-        newTab.location.href = url.toString();
-      } else {
-        // El navegador bloqueó incluso la ventana en blanco
-        showToast("Activa \"Permitir ventanas emergentes\" para Safari en Ajustes y vuelve a intentar","err");
-        setConnecting(false);
-        return;
-      }
+    // En modo pantalla completa (ícono), abrir Safari lanza una app aparte a
+    // nivel de iOS: no se puede "rellenar" esa pestaña después con JS. Por eso
+    // abrimos fintoc-connect.html YA (de forma síncrona, con el toque del
+    // usuario) y es esa misma página la que pide los datos a Fintoc.
+    const url = new URL("fintoc-connect.html", location.href);
+    url.searchParams.set("ns", ns_());
+    const opened = window.open(url.toString(), "_blank");
+    if(!opened){
+      showToast("Activa \"Permitir ventanas emergentes\" para Safari en Ajustes y vuelve a intentar","err");
+    } else {
       showToast("Se abrió Safari para conectar tu banco. Al terminar, vuelve aquí y toca 🔄 Actualizar.");
-    }catch(e){
-      if(newTab) newTab.close();
-      showToast("Error al abrir la conexión con Fintoc","err");
     }
     setConnecting(false);
     return;
