@@ -432,6 +432,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8 2 4 5 4 9c0 2.4 1.2 4.5 3 5.7V17a1 1 0 001 1h8a1 1 0 001-1v-2.3c1.8-1.2 3-3.3 3-5.7 0-4-4-7-8-7z"/><path d="M9 21h6"/></svg>
     Ahorro
   </button>
+  <button class="nav-btn" id="nav-ingresos" onclick="setView('ingresos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+    Ingresos
+  </button>
   <button class="nav-btn" id="nav-history" onclick="setView('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
     Historial
@@ -669,15 +673,17 @@ function render(){
   const filtered=transactions.filter(t=>t.fecha.startsWith(month));
   const totalIn=filtered.filter(t=>t.tipo==="ingreso").reduce((s,t)=>s+t.monto,0);
   const totalOut=filtered.filter(t=>t.tipo==="gasto").reduce((s,t)=>s+t.monto,0);
-  const totalDebtCalc=debts.filter(d=>d.paid>0).reduce((s,d)=>s+(d.total-d.paid),0);
+  const totalDebtCalc=debts.filter(d=>d.paid>0&&d.paid<d.total).reduce((s,d)=>s+(d.total-d.paid),0); // pendiente por pagar
+  const totalDebtPaidFull=debts.filter(d=>d.paid>=d.total&&d.total>0).reduce((s,d)=>s+d.total,0);   // pagada al 100%
   const balance=totalIn-totalOut-totalDebtCalc;
   const el=document.getElementById("content");
-  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc);
+  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc,totalDebtPaidFull);
   else if(currentView==="monthly") renderMonthlyDebts(el);
   else if(currentView==="add") renderAdd(el);
   else if(currentView==="savings") renderSavings(el);
   else if(currentView==="debts") renderDebts(el);
   else if(currentView==="tools") renderTools(el);
+  else if(currentView==="ingresos") renderIngresosGastos(el,filtered);
   else if(currentView==="settings") renderSettings(el);
   else if(currentView==="account") renderAccountScreen(el);
   else if(currentView==="security") renderSecurityScreen(el);
@@ -759,7 +765,7 @@ function relTime(iso){
   if(diff<86400) return `hace ${Math.floor(diff/3600)} h`;
   return `hace ${Math.floor(diff/86400)} d`;
 }
-function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
+function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDebtPaidFull){
   const positive=balance>=0;
   const total=totalIn+totalOut;
   const byCat=CATS.gasto.map(cat=>({cat,total:filtered.filter(t=>t.tipo==="gasto"&&t.categoria===cat).reduce((s,t)=>s+t.monto,0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
@@ -783,7 +789,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
       <div style="width:100%;height:1px;background:#2a2a3a"></div>
       <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
 
@@ -815,27 +821,22 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
 
   {
     const porCategoria={};
+    // 1) Gastos del mes (Transacciones) — incluye categorías personalizadas creadas por el usuario
+    filtered.filter(t=>t.tipo==="gasto").forEach(t=>{
+      const cat=t.categoria||"Otro gasto";
+      porCategoria[cat]=(porCategoria[cat]||0)+t.monto;
+    });
+    // 2) Deudas mensuales (sección DEL MES)
     monthlyDebts.forEach(d=>{
       const cat=d.categoria||"Otro gasto";
       porCategoria[cat]=(porCategoria[cat]||0)+d.amount;
     });
     const entries=Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
     const totalGasto=entries.reduce((s,[,v])=>s+v,0);
-    const catStyle={
-      "Alimentación":{color:"#f87171",icon:"🍽️"},
-      "Transporte":{color:"#38bdf8",icon:"🚗"},
-      "Vivienda":{color:"#fbbf24",icon:"🏡"},
-      "Salud":{color:"#fb7185",icon:"❤️"},
-      "Entretenimiento":{color:"#c084fc",icon:"🎬"},
-      "Ropa":{color:"#facc15",icon:"👗"},
-      "Educación":{color:"#22d3ee",icon:"📚"},
-      "Servicios":{color:"#818cf8",icon:"💡"},
-      "Otro gasto":{color:"#94a3b8",icon:"📦"}
-    };
-    const getStyle=cat=>catStyle[cat]||{color:"#94a3b8",icon:"•"};
+    const getStyle=cat=>getCategoryStyle("gasto",cat);
     if(totalGasto>0){
       html+=`<div class="card" style="animation-delay:.02s">
-        <div class="section-label">Gastos por categoría (deudas del mes)</div>
+        <div class="section-label">Gastos por categoría</div>
         ${buildKaneDonut(entries,totalGasto,getStyle)}
       </div>`;
     }
@@ -937,7 +938,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   animateNumber(document.getElementById("balance-amount"),0,balance);
 }
 function buildKaneDonut(entries,totalGasto,getStyle){
-  const CX=150,CY=130,R=75,STROKE=20,GAP=3;
+  const CX=160,CY=128,R=68,STROKE=18,GAP=3;
   const circumference=2*Math.PI*R;
   const top=entries.slice(0,4);
   const rest=entries.slice(4);
@@ -949,7 +950,7 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   const items=[...top];
   if(rest.length) items.push(["Otros",restVal]);
   
-  let cum=0, segs="", shadows="", labels="";
+  let cum=0, segs="", shadows="", radial=[];
   
   // Gradient defs
   shadows+=`<defs>
@@ -970,13 +971,40 @@ function buildKaneDonut(entries,totalGasto,getStyle){
     const offset=-cum;
     const isRest=cat==="Otros";
     const style=isRest?{color:"url(#grad-otros)",icon:"📦"}:getStyle(cat);
+    const solidColor=isRest?"#ec4899":style.color;
     const strokeColor=isRest?`url(#grad-otros)`:style.color;
     const shadowColor=isRest?"#ec489944":style.color+"44";
     
     animationStyles+=`#seg${i}{animation:drawStroke${i} 1.8s cubic-bezier(.34,.1,.68,1) ${i*0.2}s forwards}@keyframes drawStroke${i}{to{stroke-dashoffset:${offset.toFixed(1)}}}`;
     
     segs+=`<circle id="seg${i}" cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${strokeColor}" stroke-width="${STROKE}" stroke-dasharray="${dash.toFixed(1)} ${(circumference-dash).toFixed(1)}" stroke-dashoffset="${(circumference).toFixed(1)}" stroke-linecap="round" transform="rotate(-90 ${CX} ${CY})" style="filter:drop-shadow(0 0 ${isRest?"12":"8"}px ${shadowColor})"/>`;
+
+    // Ángulo medio del segmento (para las líneas guía + etiquetas radiales)
+    const midAngleDeg=((cum+len/2)/circumference)*360-90;
+    radial.push({cat:isRest?"Otros":cat, pct:Math.round(frac*100), icon:style.icon, color:solidColor, angle:midAngleDeg});
     cum+=len;
+  });
+
+  // Líneas guía + etiquetas tipo "pill" alrededor del donut (como redes sociales)
+  let guides="";
+  radial.forEach(r=>{
+    const rad=r.angle*Math.PI/180;
+    const ringX=CX+R*Math.cos(rad), ringY=CY+R*Math.sin(rad);
+    const outX=CX+(R+20)*Math.cos(rad), outY=CY+(R+20)*Math.sin(rad);
+    const side=Math.cos(rad)>=0?1:-1;
+    const stubX=CX+side*(R+66);
+    const stubY=Math.max(20,Math.min(outY, 300-46));
+    guides+=`<path d="M${ringX.toFixed(1)},${ringY.toFixed(1)} L${outX.toFixed(1)},${outY.toFixed(1)} L${stubX.toFixed(1)},${stubY.toFixed(1)}" fill="none" stroke="${r.color}" stroke-width="1.4" opacity="0.65"/>`;
+    guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.5" fill="${r.color}"/>`;
+    const fw=108, fh=42;
+    const fx=side>0?stubX+3:stubX-3-fw;
+    const fy=stubY-fh/2;
+    guides+=`<foreignObject x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="${fw}" height="${fh}">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${side>0?"flex-start":"flex-end"};font-family:inherit">
+        <div style="display:inline-flex;align-items:center;gap:5px;background:${r.color}22;border:1.3px solid ${r.color}77;border-radius:20px;padding:4px 10px;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;overflow:hidden;text-overflow:ellipsis">${r.icon} ${esc(r.cat.toUpperCase())}</div>
+        <div style="font-size:10px;color:#999;margin-top:3px;padding:0 2px">(${r.pct}%)</div>
+      </div>
+    </foreignObject>`;
   });
   
   // Leyenda expandida - mostrar TODAS las categorías
@@ -1003,19 +1031,20 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   legend+=`</div></div>`;
   
   // Center total con efecto
-  const center=`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
-    <div style="font-size:28px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
-    <div style="font-size:11px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
+  const center=`<div style="position:absolute;top:45.7%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
+    <div style="font-size:24px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
+    <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
   </div>`;
   
-  return `<div style="width:100%;max-width:360px;margin:8px auto 0">
+  return `<div style="width:100%;max-width:400px;margin:8px auto 0">
     <style>
       ${animationStyles}
     </style>
-    <div style="position:relative;width:100%;aspect-ratio:1">
-      <svg viewBox="0 0 300 280" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
+    <div style="position:relative;width:100%;aspect-ratio:320/300">
+      <svg viewBox="0 0 320 300" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
         ${shadows}
         ${segs}
+        ${guides}
       </svg>
       ${center}
     </div>
@@ -1453,6 +1482,71 @@ function renderAdd(el){
 }
 
 // ── HISTORY ───────────────────────────────────────────────
+// ── INGRESOS Y GASTOS (separados, con color/ícono por categoría) ──
+function fmtFechaCorta_(f){
+  if(!f) return "";
+  const d=new Date(f+"T00:00:00");
+  if(isNaN(d)) return f;
+  return d.toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
+}
+function ingresoGastoBlock_(tipo,filtered){
+  const list=filtered.filter(t=>t.tipo===tipo);
+  const total=list.reduce((s,t)=>s+t.monto,0);
+  const porCat={};
+  list.forEach(t=>{
+    const c=t.categoria||(tipo==="ingreso"?"Otro ingreso":"Otro gasto");
+    if(!porCat[c]) porCat[c]={total:0,items:[]};
+    porCat[c].total+=t.monto;
+    porCat[c].items.push(t);
+  });
+  const entries=Object.entries(porCat).sort((a,b)=>b[1].total-a[1].total);
+  const isIngreso=tipo==="ingreso";
+  const accent=isIngreso?"#4ade80":"#f87171";
+  const groups=entries.map(([cat,data])=>{
+    const style=getCategoryStyle(tipo,cat);
+    const pct=total>0?Math.round(data.total/total*100):0;
+    const items=data.items.slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(t=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0 8px 50px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.descripcion||cat)}</div>
+          <div style="font-size:10.5px;color:#666;margin-top:1px">${fmtFechaCorta_(t.fecha)}</div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:12.5px;font-weight:700;color:${accent};flex-shrink:0">${isIngreso?"+":"-"}${fmt(t.monto)}</div>
+      </div>`).join("");
+    return `<div style="border-bottom:1px solid #1e1e28;padding:11px 0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:38px;height:38px;border-radius:12px;background:${style.color}22;border:1.3px solid ${style.color}55;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${style.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;font-weight:700;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cat)}</div>
+          <div style="height:4px;background:#1a1a24;border-radius:3px;margin-top:6px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${style.color};border-radius:3px"></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'DM Mono',monospace;font-size:13.5px;font-weight:800;color:${accent}">${isIngreso?"+":"-"}${fmt(data.total)}</div>
+          <div style="font-size:10.5px;color:#666;margin-top:2px">${pct}% · ${data.items.length} mov.</div>
+        </div>
+      </div>
+      <div style="margin-top:2px">${items}</div>
+    </div>`;
+  }).join("");
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div class="section-label" style="margin:0">${isIngreso?"💵 Ingresos":"💸 Gastos"}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:${accent}">${isIngreso?"+":"-"}${fmt(total)}</div>
+    </div>
+    ${entries.length?groups:`<div style="text-align:center;color:#555;font-size:13px;padding:24px 0">Sin ${isIngreso?"ingresos":"gastos"} en este período</div>`}
+  </div>`;
+}
+function renderIngresosGastos(el,filtered){
+  el.innerHTML=`
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">Ingresos y gastos</div>
+    ${ingresoGastoBlock_("ingreso",filtered)}
+    <div style="height:14px"></div>
+    ${ingresoGastoBlock_("gasto",filtered)}
+  `;
+}
+
 function renderHistory(el,filtered){
   const sorted=[...filtered].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
   if(!sorted.length){ el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div>Sin transacciones en este período.</div>`; return; }
@@ -1845,7 +1939,47 @@ async function abrirFintocWidget(){
   };
   setConnecting(true);
 
-  const available=await waitForFintoc(4000);
+  // En iOS, si la app está agregada a pantalla de inicio (modo standalone),
+  // el widget de Fintoc queda en blanco porque no puede abrir su ventana de
+  // login del banco dentro de ese modo. En ese caso, abrimos una página aparte
+  // en Safari normal para completar la conexión, y el resultado queda guardado
+  // en el backend (no hace falta comunicación de vuelta hacia la app).
+  const isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+
+  if(isStandalone){
+    // IMPORTANTE: abrir la pestaña ANTES del await, si no Safari en iOS la bloquea
+    // por no considerarla parte directa del toque del usuario.
+    const newTab = window.open("", "_blank");
+    try{
+      const d=await postToScript({action:"fintocCreateLinkIntent",ns:ns_()});
+      if(d.status!=="ok"){
+        setConnecting(false);
+        if(newTab) newTab.close();
+        showToast(d.message||"No se pudo iniciar la conexión con el banco","err");
+        return;
+      }
+      const url = new URL("fintoc-connect.html", location.href);
+      url.searchParams.set("widgetToken", d.widgetToken);
+      url.searchParams.set("publicKey", d.publicKey);
+      url.searchParams.set("ns", ns_());
+      if(newTab){
+        newTab.location.href = url.toString();
+      } else {
+        // El navegador bloqueó incluso la ventana en blanco
+        showToast("Activa \"Permitir ventanas emergentes\" para Safari en Ajustes y vuelve a intentar","err");
+        setConnecting(false);
+        return;
+      }
+      showToast("Se abrió Safari para conectar tu banco. Al terminar, vuelve aquí y toca 🔄 Actualizar.");
+    }catch(e){
+      if(newTab) newTab.close();
+      showToast("Error al abrir la conexión con Fintoc","err");
+    }
+    setConnecting(false);
+    return;
+  }
+
+  const available = await waitForFintoc(4000);
   if(!available){
     setConnecting(false);
     showToast("No se pudo cargar el conector de Fintoc. Revisa tu conexión a internet.","err");
@@ -1915,6 +2049,39 @@ function submitForm(){
 }
 
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ── ESTILOS DE CATEGORÍA (color + ícono) — compartidos entre el gráfico y la pestaña Ingresos/Gastos ──
+const CAT_STYLE_GASTO={
+  "Alimentación":{color:"#f87171",icon:"🍽️"},
+  "Transporte":{color:"#38bdf8",icon:"🚗"},
+  "Vivienda":{color:"#fbbf24",icon:"🏡"},
+  "Salud":{color:"#fb7185",icon:"❤️"},
+  "Entretenimiento":{color:"#c084fc",icon:"🎬"},
+  "Ropa":{color:"#facc15",icon:"👗"},
+  "Educación":{color:"#22d3ee",icon:"📚"},
+  "Servicios":{color:"#818cf8",icon:"💡"},
+  "Otro gasto":{color:"#94a3b8",icon:"📦"}
+};
+const CAT_STYLE_INGRESO={
+  "Sueldo":{color:"#4ade80",icon:"💵"},
+  "Bono":{color:"#34d399",icon:"🎁"},
+  "Freelance":{color:"#2dd4bf",icon:"💻"},
+  "Inversión":{color:"#22c55e",icon:"📈"},
+  "Regalo":{color:"#a3e635",icon:"🎉"},
+  "Ventas":{color:"#10b981",icon:"🛍️"},
+  "Reembolso":{color:"#4ade80",icon:"↩️"},
+  "Otro ingreso":{color:"#86efac",icon:"💰"}
+};
+const CUSTOM_PALETTE_=["#34d399","#f472b6","#60a5fa","#fbbf24","#a78bfa","#fb7185","#4ade80","#f97316","#2dd4bf","#e879f9"];
+function hashColor_(str){ let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return CUSTOM_PALETTE_[h%CUSTOM_PALETTE_.length]; }
+function getCategoryStyle(tipo,cat){
+  const fixedMap=tipo==="ingreso"?CAT_STYLE_INGRESO:CAT_STYLE_GASTO;
+  if(fixedMap[cat]) return fixedMap[cat];
+  const customList=tipo==="ingreso"?(customCats.ingreso||[]):(customCats.gasto||[]);
+  const custom=customList.find(c=>c.name===cat);
+  if(custom) return {color:hashColor_(cat), icon:custom.icon||"🏷️"};
+  return {color:hashColor_(cat), icon:"•"};
+}
 
 
 // ── TICKER & REMINDERS ────────────────────────────────────
