@@ -537,11 +537,7 @@ function openModal(title,bodyHtml,confirmLabel,confirmClass,action,data){
 function closeModal(){ modalAction=null; modalData={}; document.getElementById("modal-overlay").classList.remove("show"); }
 
 function modalConfirm(){
-  if(modalAction==="fintocReturn"){
-    closeModal();
-    setView("dashboard");
-    fetchBankRecords(true);
-  } else if(modalAction==="deleteGoal"){
+  if(modalAction==="deleteGoal"){
     goals=goals.filter(g=>g.id!==modalData.id); save("fin_goals",goals); syncToCloud();
     showToast("Meta eliminada","err"); closeModal(); render();
   } else if(modalAction==="deleteTx"){
@@ -697,15 +693,14 @@ function render(){
 // ── DASHBOARD ─────────────────────────────────────────────
 function tipoLabel(tipo){
   return{checking_account:"Cuenta Corriente",savings_account:"Cuenta de Ahorro",sight_account:"Cuenta Vista",
-    rut_account:"CuentaRUT",line_of_credit:"Línea de Crédito",credit_card:"Tarjeta de Crédito"}[tipo]||"Cuenta";
+    line_of_credit:"Línea de Crédito",credit_card:"Tarjeta de Crédito"}[tipo]||"Cuenta";
 }
 function buildBigCard(c,i){
   const style=bankStyle(c.banco||c.cuenta);
-  const esCredito=["credit_card","line_of_credit"].includes(c.tipo||"");
-  // El saldo disponible viene directamente de Fintoc; los movimientos no intervienen aquí.
-  const montoPrincipal=c.disponible!=null&&!isNaN(c.disponible)?c.disponible:c.cupo;
+  const esCredito=(c.tipo||"")==="credit_card";
+  const montoPrincipal=esCredito?(c.cupo!=null&&!isNaN(c.cupo)?c.cupo:c.disponible):c.disponible;
   const tieneMonto=montoPrincipal!=null && !isNaN(montoPrincipal);
-  const label=esCredito?"CUPO DISPONIBLE":"SALDO DISPONIBLE";
+  const label=esCredito?"CUPO DISPONIBLE":"DISPONIBLE";
   const ult4=c.numero?String(c.numero).slice(-4):"••••";
   const delay=(i||0)*0.06;
   return `<div style="display:flex;align-items:center;gap:14px;padding:10px 0;animation:slideUp .35s ${delay}s cubic-bezier(.22,1,.36,1) both">
@@ -713,7 +708,14 @@ function buildBigCard(c,i){
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
       <div style="position:absolute;bottom:-26px;left:-14px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;z-index:1">
-        <div style="font-size:12.5px;font-weight:800;color:#fff;letter-spacing:.01em;line-height:1.15">${esc(c.banco||c.cuenta)}</div>
+        <div style="min-width:0">
+          ${style.domain?
+            `<div style="background:#fff;border-radius:7px;padding:3px 7px;display:inline-flex;align-items:center;height:22px;box-shadow:0 1px 4px rgba(0,0,0,.35)">
+               <img src="https://logo.clearbit.com/${style.domain}?size=80" alt="${esc(c.banco||c.cuenta)}" style="height:14px;max-width:74px;object-fit:contain;display:block" onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" />
+             </div>
+             <div style="display:none;width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`
+            :`<div style="width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`}
+        </div>
         <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;margin-top:3px"></div>
       </div>
       <div style="z-index:1">
@@ -724,21 +726,26 @@ function buildBigCard(c,i){
     <div style="flex:1;min-width:0">
       <div style="font-size:9.5px;color:#666;letter-spacing:.04em">${tieneMonto?label:"GASTADO ESTE MES"}</div>
       <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:${tieneMonto?"#4ade80":"#f87171"};margin-bottom:5px">${tieneMonto?fmt(montoPrincipal):fmt(c.gastado)}</div>
-      ${esCredito&&c.cupo!=null&&c.disponible!=null?`<div style="font-size:10.5px;color:#888">Cupo total: ${fmt(c.cupo)}</div>`:""}
+      ${esCredito?`<div style="font-size:10.5px;color:#888">Gastado: ${fmt(c.gastado)}${c.cuotas>0?` · Cuotas: ${fmt(c.cuotas)}`:""}</div>`:""}
     </div>
   </div>`;
 }
 function buildCardsListInicio(){
   const cardsSummary=getCardsSummary();
-  const deposito=cardsSummary.filter(c=>["checking_account","sight_account","savings_account","rut_account"].includes(c.tipo||""));
-  const credito=cardsSummary.filter(c=>["credit_card","line_of_credit"].includes(c.tipo||""));
+  const deposito=cardsSummary.filter(c=>!["credit_card","line_of_credit"].includes(c.tipo||""));
+  const lineaCredito=cardsSummary.filter(c=>(c.tipo||"")==="line_of_credit");
+  const credito=cardsSummary.filter(c=>(c.tipo||"")==="credit_card");
   let rows="";
   if(deposito.length){
-    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:2px 0 4px">CUENTAS DISPONIBLES</div>`;
+    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:2px 0 4px">CUENTAS DE DEPÓSITO</div>`;
     rows+=deposito.map(buildBigCard).join(`<div style="height:1px;background:#22222e;margin:2px 0"></div>`);
   }
+  if(lineaCredito.length){
+    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:${deposito.length?"14px":"2px"} 0 4px">LÍNEA DE CRÉDITO</div>`;
+    rows+=lineaCredito.map(buildBigCard).join(`<div style="height:1px;background:#22222e;margin:2px 0"></div>`);
+  }
   if(credito.length){
-    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:${deposito.length?"14px":"2px"} 0 4px">TARJETAS Y LÍNEAS DE CRÉDITO</div>`;
+    rows+=`<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:.06em;margin:${(deposito.length||lineaCredito.length)?"14px":"2px"} 0 4px">TARJETAS DE CRÉDITO</div>`;
     rows+=credito.map(buildBigCard).join(`<div style="height:1px;background:#22222e;margin:2px 0"></div>`);
   }
   rows+=`<div id="add-card-row" onclick="abrirFintocWidget()" style="display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer;margin-top:${cardsSummary.length?"6px":"2px"};transition:opacity .2s">
@@ -754,7 +761,7 @@ function buildCardsListInicio(){
   const syncLabel=lastSync?`Actualizado ${relTime(lastSync)}`:(cardsSummary.length?"Sin sincronizar aún":"");
   return `<div class="card" style="animation-delay:.01s">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
-      <div class="section-label" style="margin-bottom:0">Tus cuentas y tarjetas</div>
+      <div class="section-label" style="margin-bottom:0">Tus tarjetas</div>
       ${cardsSummary.length?`<button id="inline-sync-btn" onclick="event.stopPropagation();fetchBankRecords(true)" style="background:none;border:none;color:#4c6ef5;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;padding:2px 4px">
         <span id="inline-sync-icon" style="display:inline-block;transition:transform .5s">🔄</span> Actualizar
       </button>`:""}
@@ -771,11 +778,7 @@ function relTime(iso){
   return `hace ${Math.floor(diff/86400)} d`;
 }
 function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDebtPaidFull){
-  const fintocResumen=getFintocRealSummary();
-  // El saldo de Inicio se calcula solo con los saldos disponibles de Fintoc.
-  // Las transacciones manuales y los Registros bancarios no modifican este valor.
-  const saldoReal=fintocResumen.totalCorrientes;
-  const positive=saldoReal>=0;
+  const positive=balance>=0;
   const total=totalIn+totalOut;
   const byCat=CATS.gasto.map(cat=>({cat,total:filtered.filter(t=>t.tipo==="gasto"&&t.categoria===cat).reduce((s,t)=>s+t.monto,0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
   const maxCat=byCat[0]?.total||1;
@@ -787,16 +790,46 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   let html=`
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
-    <div id="balance-label">Saldo real disponible</div>
+    <div id="balance-label">Balance real (incluye deudas)</div>
     <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(0)}</div>
     <div class="balance-row" style="flex-wrap:wrap;gap:10px">
-      <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">CUENTAS REALES</div><div class="balance-stat-val">${fintocResumen.corrientes.length}</div></div>
+      <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#818cf8">ACTUALIZADO</div><div class="balance-stat-val" style="font-size:12px">${load("fin_bank_last_sync",null)?relTime(load("fin_bank_last_sync",null)):"Pendiente"}</div></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#f87171">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
+      <div style="width:1px;background:#2a2a3a"></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#4ade80"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
       <div style="width:100%;height:1px;background:#2a2a3a"></div>
-      <div style="font-size:11px;color:#78808f">Incluye solo cuentas corrientes, vista, ahorro y CuentaRUT. Los registros y las tarjetas de crédito no se suman.</div>
+      <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      <div style="width:1px;background:#2a2a3a"></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
+
+  {
+    const fr=getFintocRealSummary();
+    if(fr.conectado){
+      html+=`<div class="card" style="animation-delay:.015s;background:linear-gradient(135deg,#0d1f2e,#0a1420);border-color:#1a3a4a">
+        <div class="section-label">💰 Dinero disponible real (Fintoc)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e2a35">
+          <div style="font-size:12.5px;color:#999">${fr.principal?esc(fr.principal.banco||fr.principal.cuenta)+" · cta. principal":"Cuenta corriente principal"}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#4ade80">${fmt(fr.principal?.disponible||0)}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e2a35">
+          <div style="font-size:12.5px;color:#999">Resto de cuentas corrientes${fr.resto.length?` (${fr.resto.length})`:""}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#4ade80">${fmt(fr.restoSum)}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px">
+          <div style="font-size:13px;color:#ccc;font-weight:700">Total disponible en cuentas</div>
+          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#4ade80">${fmt(fr.totalCorrientes)}</div>
+        </div>
+        <div style="height:1px;background:#1e2a35;margin:8px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:13px;color:#ccc;font-weight:700">💳 Crédito total disponible${fr.creditos.length?` (${fr.creditos.length} cuenta${fr.creditos.length>1?"s":""})`:""}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#a78bfa">${fmt(fr.creditoTotal)}</div>
+        </div>
+      </div>`;
+    }
+  }
 
   {
     const porCategoria={};
@@ -914,7 +947,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   html+=`</div>`;
 
   el.innerHTML=html;
-  animateNumber(document.getElementById("balance-amount"),0,saldoReal);
+  animateNumber(document.getElementById("balance-amount"),0,balance);
 }
 function buildKaneDonut(entries,totalGasto,getStyle){
   const VB_W=320, VB_H=320;
@@ -1769,20 +1802,29 @@ function renderCategorias(el){
 
 function getCardsSummary(){
   const map={};
-  // Solo se usan los saldos actuales de Fintoc. Los Registros son historial.
-  bankAccounts.forEach(a=>{
-    const key=[a.cuenta,a.numero,a.tipo].join("::");
-    map[key]={
-      cuenta:a.cuenta, banco:a.banco, tipo:a.tipo, numero:a.numero,
-      disponible:a.disponible, actual:a.actual, cupo:a.cupo
-    };
+  bankRecords.forEach(r=>{
+    const cuenta=r.cuenta||"Cuenta";
+    if(!map[cuenta]) map[cuenta]={cuenta,gastado:0,cuotas:0};
+    if(r.monto<0){
+      const abs=Math.abs(r.monto);
+      map[cuenta].gastado+=abs;
+      if(/cuota|\b\d{1,2}\s*\/\s*\d{1,2}\b/i.test(r.descripcion||"")) map[cuenta].cuotas+=abs;
+    }
   });
-  return Object.values(map).sort((a,b)=>(b.disponible||0)-(a.disponible||0));
+  bankAccounts.forEach(a=>{
+    if(!map[a.cuenta]) map[a.cuenta]={cuenta:a.cuenta,gastado:0,cuotas:0};
+    map[a.cuenta].banco=a.banco;
+    map[a.cuenta].tipo=a.tipo;
+    map[a.cuenta].numero=a.numero;
+    map[a.cuenta].disponible=a.disponible;
+    map[a.cuenta].cupo=a.cupo;
+  });
+  return Object.values(map).sort((a,b)=>(b.disponible||0)-(a.disponible||0)||b.gastado-a.gastado);
 }
 // Resumen real basado en saldos de Fintoc (no en transacciones manuales)
 function getFintocRealSummary(){
   const cardsSummary=getCardsSummary();
-  const esCorriente=c=>["checking_account","sight_account","savings_account","rut_account"].includes(c.tipo||"");
+  const esCorriente=c=>["checking_account","sight_account","savings_account"].includes(c.tipo||"");
   const esCredito=c=>["line_of_credit","credit_card"].includes(c.tipo||"");
   const corrientes=cardsSummary.filter(esCorriente).filter(c=>c.disponible!=null&&!isNaN(c.disponible))
     .sort((a,b)=>b.disponible-a.disponible);
@@ -1796,29 +1838,30 @@ function getFintocRealSummary(){
   },0);
   return{
     conectado:cardsSummary.length>0,
-    corrientes, principal, resto, restoSum,
+    principal, resto, restoSum,
     totalCorrientes:(principal?.disponible||0)+restoSum,
     creditos, creditoTotal
   };
 }
 function bankStyle(name){
   const n=(name||"").toLowerCase();
-  if(n.includes("chile")) return{bg:"linear-gradient(135deg,#1e5fbf,#0f3d8a)",icon:"🏦"};
-  if(n.includes("scotia")) return{bg:"linear-gradient(135deg,#e01030,#7a0b1f)",icon:"🔴"};
-  if(n.includes("santander")) return{bg:"linear-gradient(135deg,#ec0000,#7a0000)",icon:"🔥"};
-  if(n.includes("bci")) return{bg:"linear-gradient(135deg,#0077c8,#004b87)",icon:"💳"};
-  if(n.includes("estado")) return{bg:"linear-gradient(135deg,#2e2e4a,#15152a)",icon:"🏛️"};
-  if(n.includes("itau")||n.includes("itaú")) return{bg:"linear-gradient(135deg,#f5a623,#c76e00)",icon:"🟠"};
-  if(n.includes("falabella")||n.includes("cmr")) return{bg:"linear-gradient(135deg,#2d9d56,#1a5d31)",icon:"🛍️"};
-  if(n.includes("ripley")) return{bg:"linear-gradient(135deg,#e4032e,#7a0018)",icon:"🛒"};
-  if(n.includes("bice")) return{bg:"linear-gradient(135deg,#f5c518,#b8930a)",icon:"🟡"};
-  if(n.includes("security")) return{bg:"linear-gradient(135deg,#1a3a6e,#0d1f3d)",icon:"🔒"};
-  if(n.includes("consorcio")) return{bg:"linear-gradient(135deg,#00857a,#004d47)",icon:"🟢"};
-  if(n.includes("coopeuch")) return{bg:"linear-gradient(135deg,#e07a00,#8a4a00)",icon:"🤝"};
-  if(n.includes("internacional")) return{bg:"linear-gradient(135deg,#5a3a8a,#2e1a4d)",icon:"🌐"};
-  if(n.includes("hsbc")) return{bg:"linear-gradient(135deg,#db0011,#7a0009)",icon:"🌍"};
-  if(n.includes("mercado pago")||n.includes("mercadopago")) return{bg:"linear-gradient(135deg,#00b1ea,#0088b8)",icon:"💙"};
-  return{bg:"linear-gradient(135deg,#3a3a5a,#1e1e2e)",icon:"💳"};
+  if(n.includes("chile")) return{bg:"linear-gradient(135deg,#1e5fbf,#0f3d8a)",icon:"🏦",mono:"BCh",domain:"bancochile.cl"};
+  if(n.includes("scotia")) return{bg:"linear-gradient(135deg,#e01030,#7a0b1f)",icon:"🔴",mono:"SB",domain:"scotiabankchile.cl"};
+  if(n.includes("santander")) return{bg:"linear-gradient(135deg,#ec0000,#7a0000)",icon:"🔥",mono:"SAN",domain:"santander.cl"};
+  if(n.includes("bci")) return{bg:"linear-gradient(135deg,#0077c8,#004b87)",icon:"💳",mono:"BCI",domain:"bci.cl"};
+  if(n.includes("estado")) return{bg:"linear-gradient(135deg,#2e2e4a,#15152a)",icon:"🏛️",mono:"BE",domain:"bancoestado.cl"};
+  if(n.includes("itau")||n.includes("itaú")) return{bg:"linear-gradient(135deg,#f5a623,#c76e00)",icon:"🟠",mono:"Itaú",domain:"itau.cl"};
+  if(n.includes("falabella")||n.includes("cmr")) return{bg:"linear-gradient(135deg,#2d9d56,#1a5d31)",icon:"🛍️",mono:"CMR",domain:"cmrfalabella.com"};
+  if(n.includes("ripley")) return{bg:"linear-gradient(135deg,#e4032e,#7a0018)",icon:"🛒",mono:"RIP",domain:"bancoripley.cl"};
+  if(n.includes("bice")) return{bg:"linear-gradient(135deg,#f5c518,#b8930a)",icon:"🟡",mono:"BICE",domain:"bice.cl"};
+  if(n.includes("security")) return{bg:"linear-gradient(135deg,#1a3a6e,#0d1f3d)",icon:"🔒",mono:"SEC",domain:"bancosecurity.cl"};
+  if(n.includes("consorcio")) return{bg:"linear-gradient(135deg,#00857a,#004d47)",icon:"🟢",mono:"CON",domain:"banconsorcio.cl"};
+  if(n.includes("coopeuch")) return{bg:"linear-gradient(135deg,#e07a00,#8a4a00)",icon:"🤝",mono:"CEU",domain:"coopeuch.cl"};
+  if(n.includes("internacional")) return{bg:"linear-gradient(135deg,#5a3a8a,#2e1a4d)",icon:"🌐",mono:"BI",domain:"internacional.cl"};
+  if(n.includes("hsbc")) return{bg:"linear-gradient(135deg,#db0011,#7a0009)",icon:"🌍",mono:"HSBC",domain:"hsbc.cl"};
+  if(n.includes("mercado pago")||n.includes("mercadopago")) return{bg:"linear-gradient(135deg,#00b1ea,#0088b8)",icon:"💙",mono:"MP",domain:"mercadopago.cl"};
+  const initials=(name||"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")||"$";
+  return{bg:"linear-gradient(135deg,#3a3a5a,#1e1e2e)",icon:"💳",mono:initials,domain:null};
 }
 function renderRegistros(el){
   const sorted=[...bankRecords].sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
@@ -1872,11 +1915,11 @@ async function fetchBankRecords(silent){
     const d=await postToScript({action:"fintocSync",ns:ns_()});
     if(d.status==="ok"){
       const rows=await getSheet(nsSheet_("Registros"));
-      bankRecords=rows.length>1?rows.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]})):[];
+      if(rows.length>1) bankRecords=rows.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]}));
       save("fin_bank_records",bankRecords);
       try{
         const accRows=await getSheet(nsSheet_("Cuentas"));
-        bankAccounts=accRows.length>1?accRows.slice(1).map(row=>({cuenta:row[0],banco:row[1],numero:row[2],tipo:row[3],disponible:Number(row[4]),actual:Number(row[5]),cupo:Number(row[6])})):[];
+        if(accRows.length>1) bankAccounts=accRows.slice(1).map(row=>({cuenta:row[0],banco:row[1],numero:row[2],tipo:row[3],disponible:Number(row[4]),actual:Number(row[5]),cupo:Number(row[6])}));
         save("fin_bank_accounts",bankAccounts);
       }catch(e){}
       save("fin_bank_last_sync",new Date().toISOString());
@@ -1906,17 +1949,6 @@ function waitForFintoc(timeoutMs){
       else if(Date.now()-start>timeoutMs){ clearInterval(iv); resolve(false); }
     },200);
   });
-}
-
-function openFintocReturnModal(banco){
-  openModal(
-    "¡Banco conectado!",
-    `<div style="text-align:center;padding:8px 0 4px">
-      <div style="font-size:38px;margin-bottom:8px">✓</div>
-      <div style="font-size:14px;color:#cbd5e1;line-height:1.5">${esc(banco||"Tu banco")} ya está enlazado.<br>Volveremos a Inicio para mostrar tu tarjeta y su saldo disponible.</div>
-    </div>`,
-    "Volver a la app", "primary", "fintocReturn", {}
-  );
 }
 
 async function abrirFintocWidget(){
@@ -1978,11 +2010,8 @@ async function abrirFintocWidget(){
         try{
           const r=await postToScript({action:"fintocSaveLink",exchangeToken:linkIntent.exchangeToken,ns:ns_()});
           if(r.status==="ok"){
+            showToast(`✓ ${r.banco||"Banco"} conectado correctamente`);
             await fetchBankRecords(true);
-            // Cerramos el widget de Fintoc y mostramos un retorno claro a la app.
-            if(typeof widget.hide==="function") widget.hide();
-            setConnecting(false);
-            openFintocReturnModal(r.banco);
           } else {
             showToast(r.message||"No se pudo guardar la conexión","err");
           }
@@ -2469,6 +2498,20 @@ async function initialSync(){
   else console.log("Sin conexión al abrir — se mantienen los datos locales hasta la próxima sincronización");
 }
 initialSync();
+
+// Al volver a la app (ej. después de conectar un banco en Safari desde el ícono
+// de pantalla de inicio), sincroniza automáticamente sin que el usuario tenga
+// que acordarse de tocar 🔄.
+let lastAutoSyncAt=0;
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible" && sessionStorage.getItem("fin_unlocked")==="1"){
+    const now=Date.now();
+    if(now-lastAutoSyncAt>15000){ // evita sincronizar demasiado seguido
+      lastAutoSyncAt=now;
+      fetchBankRecords(true).catch(()=>{});
+    }
+  }
+});
 // ── MONTHLY DEBTS VIEW ────────────────────────────────────
 const MONTHLY_CATS = ["Gastos comunes","Tarjeta de crédito","Supermercado","Servicios","Arriendo","Internet/Telefonía","Seguro","Educación","Salud","Otro"];
 
