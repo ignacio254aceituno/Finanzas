@@ -703,7 +703,14 @@ function buildBigCard(c,i){
   const label=esCredito?"CUPO DISPONIBLE":"DISPONIBLE";
   const ult4=c.numero?String(c.numero).slice(-4):"••••";
   const delay=(i||0)*0.06;
-  return `<div style="display:flex;align-items:center;gap:14px;padding:10px 0;animation:slideUp .35s ${delay}s cubic-bezier(.22,1,.36,1) both">
+  const cardKey=esc((c.cuenta||"").replace(/'/g,"\\'"));
+  return `<div class="swipe-wrap" style="position:relative;overflow:hidden;border-radius:14px;animation:slideUp .35s ${delay}s cubic-bezier(.22,1,.36,1) both">
+    <div class="swipe-delete-bg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;background:#ef4444;border-radius:14px">
+      <button onclick="deleteBankCard('${cardKey}')" style="background:none;border:none;color:#fff;font-size:12px;font-weight:800;padding:0 20px;height:100%;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span style="font-size:18px">🗑️</span>Eliminar
+      </button>
+    </div>
+    <div class="swipe-content" style="display:flex;align-items:center;gap:14px;padding:10px 0;background:#0a0a0f;position:relative;touch-action:pan-y" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event,this)" ontouchend="swipeEnd(event,this)">
     <div style="width:148px;height:92px;border-radius:14px;background:${style.bg};padding:12px 13px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
       <div style="position:absolute;bottom:-26px;left:-14px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
@@ -728,10 +735,12 @@ function buildBigCard(c,i){
       <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:${tieneMonto?"#4ade80":"#f87171"};margin-bottom:5px">${tieneMonto?fmt(montoPrincipal):fmt(c.gastado)}</div>
       ${esCredito?`<div style="font-size:10.5px;color:#888">Gastado: ${fmt(c.gastado)}${c.cuotas>0?` · Cuotas: ${fmt(c.cuotas)}`:""}</div>`:""}
     </div>
+    </div>
   </div>`;
 }
 function buildCardsListInicio(){
-  const cardsSummary=getCardsSummary();
+  const hiddenBankCards=load("fin_hidden_bank_cards",[]);
+  const cardsSummary=getCardsSummary().filter(c=>!hiddenBankCards.includes(c.cuenta));
   const deposito=cardsSummary.filter(c=>!["credit_card","line_of_credit"].includes(c.tipo||""));
   const lineaCredito=cardsSummary.filter(c=>(c.tipo||"")==="line_of_credit");
   const credito=cardsSummary.filter(c=>(c.tipo||"")==="credit_card");
@@ -1842,6 +1851,40 @@ function getFintocRealSummary(){
     totalCorrientes:(principal?.disponible||0)+restoSum,
     creditos, creditoTotal
   };
+}
+// ── DESLIZAR PARA ELIMINAR TARJETAS ──────────────────────────
+let _swipeStartX=0,_swipeStartY=0,_swipeDeltaX=0,_swipeLocked=false,_swipeAxis=null;
+function swipeStart(e){
+  const t=e.touches[0];
+  _swipeStartX=t.clientX; _swipeStartY=t.clientY; _swipeDeltaX=0; _swipeLocked=false; _swipeAxis=null;
+}
+function swipeMove(e,el){
+  const t=e.touches[0];
+  const dx=t.clientX-_swipeStartX, dy=t.clientY-_swipeStartY;
+  if(!_swipeAxis){
+    if(Math.abs(dx)<6 && Math.abs(dy)<6) return;
+    _swipeAxis=Math.abs(dx)>Math.abs(dy)?"x":"y";
+  }
+  if(_swipeAxis==="y") return; // dejar que la página haga scroll normal
+  e.preventDefault();
+  const base=el.dataset.open==="1"?-90:0;
+  _swipeDeltaX=Math.min(0,Math.max(base+dx,-90));
+  el.style.transform=`translateX(${_swipeDeltaX}px)`;
+}
+function swipeEnd(e,el){
+  if(_swipeAxis!=="x") return;
+  const shouldOpen=_swipeDeltaX<-45;
+  el.style.transition="transform .2s ease";
+  el.style.transform=shouldOpen?"translateX(-90px)":"translateX(0px)";
+  el.dataset.open=shouldOpen?"1":"0";
+  setTimeout(()=>{ if(el) el.style.transition=""; },220);
+}
+function deleteBankCard(cuentaKey){
+  const hidden=load("fin_hidden_bank_cards",[]);
+  if(!hidden.includes(cuentaKey)) hidden.push(cuentaKey);
+  save("fin_hidden_bank_cards",hidden);
+  showToast("Tarjeta eliminada de la app");
+  render();
 }
 function bankStyle(name){
   const n=(name||"").toLowerCase();
