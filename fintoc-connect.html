@@ -42,6 +42,15 @@ async function postToScript(payload){
 
 function show(html){ document.getElementById("state").innerHTML = html; }
 
+function volverALaApp(){
+  // Si esta pestaña se abrió con window.open (caso normal), se puede cerrar
+  // y el usuario vuelve solo a Zynto (que ya se actualizó por la señal).
+  window.close();
+  // Si el navegador no permite cerrarla (algunos Safari no dejan), como
+  // respaldo navegamos directo a la app.
+  setTimeout(()=>{ location.href = new URL("index.html", location.href).toString(); }, 300);
+}
+
 function getParam(name){ return new URLSearchParams(location.search).get(name); }
 
 async function init(){
@@ -86,9 +95,11 @@ async function init(){
       try{
         const r = await postToScript({ action:"fintocSaveLink", exchangeToken: linkIntent.exchangeToken, ns });
         if(r.status==="ok"){
-          show(`<div class="ok">✓</div><div class="msg"><b>${r.banco||"Banco"} conectado correctamente.</b><br><br>Ya puedes cerrar esta pestaña y volver a Zynto. Toca 🔄 para actualizar tus movimientos.</div>`);
+          try{ localStorage.setItem("fin_bank_sync_signal", String(Date.now())); }catch(e2){}
+          show(`<div class="ok">✓</div><div class="msg"><b>${r.banco||"Banco"} conectado correctamente.</b><br><br>Zynto ya se está actualizando solo.</div><button onclick="volverALaApp()" style="margin-top:16px">Volver a la app</button>`);
         } else {
-          show(`<div class="err">⚠️</div><div class="msg">${r.message||"No se pudo guardar la conexión."}</div>`);
+          const msgTxt = typeof r.message==="string" ? r.message : (r.message ? JSON.stringify(r.message) : "No se pudo guardar la conexión.");
+          show(`<div class="err">⚠️</div><div class="msg">${msgTxt}</div>`);
         }
       }catch(e){
         show(`<div class="err">⚠️</div><div class="msg">Se conectó el banco pero no se pudo confirmar. Vuelve a la app y toca 🔄 Actualizar.</div>`);

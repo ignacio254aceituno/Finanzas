@@ -710,11 +710,11 @@ function buildBigCard(c,i){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;z-index:1">
         <div style="min-width:0">
           ${style.domain?
-            `<div style="background:#fff;border-radius:7px;padding:3px 7px;display:inline-flex;align-items:center;height:22px;box-shadow:0 1px 4px rgba(0,0,0,.35)">
-               <img src="https://logo.clearbit.com/${style.domain}?size=80" alt="${esc(c.banco||c.cuenta)}" style="height:14px;max-width:74px;object-fit:contain;display:block" onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" />
+            `<div style="width:26px;height:26px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.35)">
+               <img src="https://www.google.com/s2/favicons?domain=${style.domain}&sz=128" alt="${esc(c.banco||c.cuenta)}" style="width:18px;height:18px;object-fit:contain;display:block" onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" />
              </div>
-             <div style="display:none;width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`
-            :`<div style="width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`}
+             <div style="display:none;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`
+            :`<div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`}
         </div>
         <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;margin-top:3px"></div>
       </div>
@@ -2503,14 +2503,22 @@ initialSync();
 // de pantalla de inicio), sincroniza automáticamente sin que el usuario tenga
 // que acordarse de tocar 🔄.
 let lastAutoSyncAt=0;
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible" && sessionStorage.getItem("fin_unlocked")==="1"){
-    const now=Date.now();
-    if(now-lastAutoSyncAt>15000){ // evita sincronizar demasiado seguido
-      lastAutoSyncAt=now;
-      fetchBankRecords(true).catch(()=>{});
-    }
+function maybeAutoSyncBanks(){
+  if(sessionStorage.getItem("fin_unlocked")!=="1") return;
+  const now=Date.now();
+  if(now-lastAutoSyncAt>4000){
+    lastAutoSyncAt=now;
+    fetchBankRecords(true).catch(()=>{});
   }
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible") maybeAutoSyncBanks();
+});
+// Señal entre pestañas: cuando fintoc-connect.html termina de conectar un banco
+// (en modo standalone, es otra pestaña), avisa por localStorage y esta pestaña
+// se actualiza al instante, sin esperar a que el usuario vuelva manualmente.
+window.addEventListener("storage",(e)=>{
+  if(e.key==="fin_bank_sync_signal") maybeAutoSyncBanks();
 });
 // ── MONTHLY DEBTS VIEW ────────────────────────────────────
 const MONTHLY_CATS = ["Gastos comunes","Tarjeta de crédito","Supermercado","Servicios","Arriendo","Internet/Telefonía","Seguro","Educación","Salud","Otro"];
