@@ -711,7 +711,7 @@ function buildBigCard(c,i){
         <div style="min-width:0">
           ${style.domain?
             `<div style="width:26px;height:26px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.35)">
-               <img src="https://www.google.com/s2/favicons?domain=${style.domain}&sz=128" alt="${esc(c.banco||c.cuenta)}" style="width:18px;height:18px;object-fit:contain;display:block" onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" />
+               <img src="https://www.google.com/s2/favicons?domain=${style.domain}&sz=128" alt="${esc(c.banco||c.cuenta)}" style="width:18px;height:18px;object-fit:contain;display:block" onerror="this.onerror=function(){this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'};this.src='https://icons.duckduckgo.com/ip3/${style.domain}.ico'" />
              </div>
              <div style="display:none;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`
             :`<div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`}
