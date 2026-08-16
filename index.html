@@ -432,10 +432,6 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8 2 4 5 4 9c0 2.4 1.2 4.5 3 5.7V17a1 1 0 001 1h8a1 1 0 001-1v-2.3c1.8-1.2 3-3.3 3-5.7 0-4-4-7-8-7z"/><path d="M9 21h6"/></svg>
     Ahorro
   </button>
-  <button class="nav-btn" id="nav-ingresos" onclick="setView('ingresos')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-    Ingresos
-  </button>
   <button class="nav-btn" id="nav-history" onclick="setView('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
     Historial
@@ -673,17 +669,15 @@ function render(){
   const filtered=transactions.filter(t=>t.fecha.startsWith(month));
   const totalIn=filtered.filter(t=>t.tipo==="ingreso").reduce((s,t)=>s+t.monto,0);
   const totalOut=filtered.filter(t=>t.tipo==="gasto").reduce((s,t)=>s+t.monto,0);
-  const totalDebtCalc=debts.filter(d=>d.paid>0&&d.paid<d.total).reduce((s,d)=>s+(d.total-d.paid),0); // pendiente por pagar
-  const totalDebtPaidFull=debts.filter(d=>d.paid>=d.total&&d.total>0).reduce((s,d)=>s+d.total,0);   // pagada al 100%
+  const totalDebtCalc=debts.filter(d=>d.paid>0).reduce((s,d)=>s+(d.total-d.paid),0);
   const balance=totalIn-totalOut-totalDebtCalc;
   const el=document.getElementById("content");
-  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc,totalDebtPaidFull);
+  if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc);
   else if(currentView==="monthly") renderMonthlyDebts(el);
   else if(currentView==="add") renderAdd(el);
   else if(currentView==="savings") renderSavings(el);
   else if(currentView==="debts") renderDebts(el);
   else if(currentView==="tools") renderTools(el);
-  else if(currentView==="ingresos") renderIngresosGastos(el,filtered);
   else if(currentView==="settings") renderSettings(el);
   else if(currentView==="account") renderAccountScreen(el);
   else if(currentView==="security") renderSecurityScreen(el);
@@ -765,7 +759,7 @@ function relTime(iso){
   if(diff<86400) return `hace ${Math.floor(diff/3600)} h`;
   return `hace ${Math.floor(diff/86400)} d`;
 }
-function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDebtPaidFull){
+function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt){
   const positive=balance>=0;
   const total=totalIn+totalOut;
   const byCat=CATS.gasto.map(cat=>({cat,total:filtered.filter(t=>t.tipo==="gasto"&&t.categoria===cat).reduce((s,t)=>s+t.monto,0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
@@ -789,9 +783,28 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
       <div style="width:100%;height:1px;background:#2a2a3a"></div>
       <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
       <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
+
+  // Agregar cards de Balance Total y Disponible para gastar
+  {
+    const acc=getAccountTotals();
+    if(acc.tieneCuentas||acc.tieneCredito){
+      html+=`<div style="display:flex;gap:10px;margin:12px 0">
+        ${acc.tieneCuentas?`<div style="flex:1;background:#131320;border:1px solid #22222e;border-radius:16px;padding:14px 16px;min-width:0">
+          <div style="font-size:9.5px;font-weight:800;color:#666;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">🏦 Balance total</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:#4ade80;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fmt(acc.balanceCuentas)}</div>
+          <div style="font-size:10px;color:#555;margin-top:3px">Suma de tus cuentas</div>
+        </div>`:""}
+        ${acc.tieneCredito?`<div style="flex:1;background:linear-gradient(135deg,#2a0f14,#1a0d12);border:1px solid #4a1a22;border-radius:16px;padding:14px 16px;min-width:0">
+          <div style="font-size:9.5px;font-weight:800;color:#e0748a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">💳 Disponible para gastar</div>
+          <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:#f87171;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fmt(acc.disponibleCredito)}</div>
+          <div style="font-size:10px;color:#8a5560;margin-top:3px">Cupo de tus tarjetas/líneas</div>
+        </div>`:""}
+      </div>`;
+    }
+  }
 
   {
     const fr=getFintocRealSummary();
@@ -821,22 +834,27 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
 
   {
     const porCategoria={};
-    // 1) Gastos del mes (Transacciones) — incluye categorías personalizadas creadas por el usuario
-    filtered.filter(t=>t.tipo==="gasto").forEach(t=>{
-      const cat=t.categoria||"Otro gasto";
-      porCategoria[cat]=(porCategoria[cat]||0)+t.monto;
-    });
-    // 2) Deudas mensuales (sección DEL MES)
     monthlyDebts.forEach(d=>{
       const cat=d.categoria||"Otro gasto";
       porCategoria[cat]=(porCategoria[cat]||0)+d.amount;
     });
     const entries=Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
     const totalGasto=entries.reduce((s,[,v])=>s+v,0);
-    const getStyle=cat=>getCategoryStyle("gasto",cat);
+    const catStyle={
+      "Alimentación":{color:"#f87171",icon:"🍽️"},
+      "Transporte":{color:"#38bdf8",icon:"🚗"},
+      "Vivienda":{color:"#fbbf24",icon:"🏡"},
+      "Salud":{color:"#fb7185",icon:"❤️"},
+      "Entretenimiento":{color:"#c084fc",icon:"🎬"},
+      "Ropa":{color:"#facc15",icon:"👗"},
+      "Educación":{color:"#22d3ee",icon:"📚"},
+      "Servicios":{color:"#818cf8",icon:"💡"},
+      "Otro gasto":{color:"#94a3b8",icon:"📦"}
+    };
+    const getStyle=cat=>catStyle[cat]||{color:"#94a3b8",icon:"•"};
     if(totalGasto>0){
       html+=`<div class="card" style="animation-delay:.02s">
-        <div class="section-label">Gastos por categoría</div>
+        <div class="section-label">Gastos por categoría (deudas del mes)</div>
         ${buildKaneDonut(entries,totalGasto,getStyle)}
       </div>`;
     }
@@ -938,8 +956,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   animateNumber(document.getElementById("balance-amount"),0,balance);
 }
 function buildKaneDonut(entries,totalGasto,getStyle){
-  const VB_W=320, VB_H=320;
-  const CX=160,CY=140,R=56,STROKE=16,GAP=3;
+  const CX=150,CY=130,R=75,STROKE=20,GAP=3;
   const circumference=2*Math.PI*R;
   const top=entries.slice(0,4);
   const rest=entries.slice(4);
@@ -951,7 +968,7 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   const items=[...top];
   if(rest.length) items.push(["Otros",restVal]);
   
-  let cum=0, segs="", shadows="", radial=[];
+  let cum=0, segs="", shadows="", labels="";
   
   // Gradient defs
   shadows+=`<defs>
@@ -972,43 +989,13 @@ function buildKaneDonut(entries,totalGasto,getStyle){
     const offset=-cum;
     const isRest=cat==="Otros";
     const style=isRest?{color:"url(#grad-otros)",icon:"📦"}:getStyle(cat);
-    const solidColor=isRest?"#ec4899":style.color;
     const strokeColor=isRest?`url(#grad-otros)`:style.color;
     const shadowColor=isRest?"#ec489944":style.color+"44";
     
     animationStyles+=`#seg${i}{animation:drawStroke${i} 1.8s cubic-bezier(.34,.1,.68,1) ${i*0.2}s forwards}@keyframes drawStroke${i}{to{stroke-dashoffset:${offset.toFixed(1)}}}`;
     
     segs+=`<circle id="seg${i}" cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${strokeColor}" stroke-width="${STROKE}" stroke-dasharray="${dash.toFixed(1)} ${(circumference-dash).toFixed(1)}" stroke-dashoffset="${(circumference).toFixed(1)}" stroke-linecap="round" transform="rotate(-90 ${CX} ${CY})" style="filter:drop-shadow(0 0 ${isRest?"12":"8"}px ${shadowColor})"/>`;
-
-    // Ángulo medio del segmento (para las líneas guía + etiquetas radiales)
-    const midAngleDeg=((cum+len/2)/circumference)*360-90;
-    radial.push({cat:isRest?"Otros":cat, pct:Math.round(frac*100), icon:style.icon, color:solidColor, angle:midAngleDeg});
     cum+=len;
-  });
-
-  // Líneas guía + etiquetas tipo "pill" alrededor del donut (como redes sociales)
-  const fw=92, fh=38, PAD=4;
-  let guides="";
-  radial.forEach(r=>{
-    const rad=r.angle*Math.PI/180;
-    const ringX=CX+R*Math.cos(rad), ringY=CY+R*Math.sin(rad);
-    const outX=CX+(R+14)*Math.cos(rad), outY=CY+(R+14)*Math.sin(rad);
-    const side=Math.cos(rad)>=0?1:-1;
-    let stubX=CX+side*(R+42);
-    // nunca dejar que la etiqueta se salga del viewBox
-    stubX=side>0?Math.min(stubX,VB_W-fw-PAD):Math.max(stubX,fw+PAD);
-    const stubY=Math.max(fh/2+PAD,Math.min(outY, VB_H-fh/2-PAD));
-    guides+=`<path d="M${ringX.toFixed(1)},${ringY.toFixed(1)} L${outX.toFixed(1)},${outY.toFixed(1)} L${stubX.toFixed(1)},${stubY.toFixed(1)}" fill="none" stroke="${r.color}" stroke-width="1.2" opacity="0.6"/>`;
-    guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.2" fill="${r.color}"/>`;
-    const fx=side>0?stubX+3:stubX-3-fw;
-    const fy=stubY-fh/2;
-    const nombreCorto=r.cat.length>12?r.cat.slice(0,11)+"…":r.cat;
-    guides+=`<foreignObject x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="${fw}" height="${fh}">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${side>0?"flex-start":"flex-end"};font-family:inherit">
-        <div style="display:inline-flex;align-items:center;gap:4px;background:${r.color}22;border:1px solid ${r.color}77;border-radius:16px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
-        <div style="font-size:9px;color:#999;margin-top:2px;padding:0 2px">(${r.pct}%)</div>
-      </div>
-    </foreignObject>`;
   });
   
   // Leyenda expandida - mostrar TODAS las categorías
@@ -1035,21 +1022,19 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   legend+=`</div></div>`;
   
   // Center total con efecto
-  const centerTopPct=(CY/VB_H*100).toFixed(1);
-  const center=`<div style="position:absolute;top:${centerTopPct}%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
-    <div style="font-size:22px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
-    <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
+  const center=`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
+    <div style="font-size:28px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
+    <div style="font-size:11px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
   </div>`;
   
-  return `<div style="width:100%;max-width:380px;margin:8px auto 0">
+  return `<div style="width:100%;max-width:360px;margin:8px auto 0">
     <style>
       ${animationStyles}
     </style>
-    <div style="position:relative;width:100%;aspect-ratio:${VB_W}/${VB_H}">
-      <svg viewBox="0 0 ${VB_W} ${VB_H}" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
+    <div style="position:relative;width:100%;aspect-ratio:1">
+      <svg viewBox="0 0 300 280" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
         ${shadows}
         ${segs}
-        ${guides}
       </svg>
       ${center}
     </div>
@@ -1487,71 +1472,6 @@ function renderAdd(el){
 }
 
 // ── HISTORY ───────────────────────────────────────────────
-// ── INGRESOS Y GASTOS (separados, con color/ícono por categoría) ──
-function fmtFechaCorta_(f){
-  if(!f) return "";
-  const d=new Date(f+"T00:00:00");
-  if(isNaN(d)) return f;
-  return d.toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
-}
-function ingresoGastoBlock_(tipo,filtered){
-  const list=filtered.filter(t=>t.tipo===tipo);
-  const total=list.reduce((s,t)=>s+t.monto,0);
-  const porCat={};
-  list.forEach(t=>{
-    const c=t.categoria||(tipo==="ingreso"?"Otro ingreso":"Otro gasto");
-    if(!porCat[c]) porCat[c]={total:0,items:[]};
-    porCat[c].total+=t.monto;
-    porCat[c].items.push(t);
-  });
-  const entries=Object.entries(porCat).sort((a,b)=>b[1].total-a[1].total);
-  const isIngreso=tipo==="ingreso";
-  const accent=isIngreso?"#4ade80":"#f87171";
-  const groups=entries.map(([cat,data])=>{
-    const style=getCategoryStyle(tipo,cat);
-    const pct=total>0?Math.round(data.total/total*100):0;
-    const items=data.items.slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(t=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0 8px 50px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12.5px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.descripcion||cat)}</div>
-          <div style="font-size:10.5px;color:#666;margin-top:1px">${fmtFechaCorta_(t.fecha)}</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:12.5px;font-weight:700;color:${accent};flex-shrink:0">${isIngreso?"+":"-"}${fmt(t.monto)}</div>
-      </div>`).join("");
-    return `<div style="border-bottom:1px solid #1e1e28;padding:11px 0">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:38px;height:38px;border-radius:12px;background:${style.color}22;border:1.3px solid ${style.color}55;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${style.icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13.5px;font-weight:700;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cat)}</div>
-          <div style="height:4px;background:#1a1a24;border-radius:3px;margin-top:6px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${style.color};border-radius:3px"></div>
-          </div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:'DM Mono',monospace;font-size:13.5px;font-weight:800;color:${accent}">${isIngreso?"+":"-"}${fmt(data.total)}</div>
-          <div style="font-size:10.5px;color:#666;margin-top:2px">${pct}% · ${data.items.length} mov.</div>
-        </div>
-      </div>
-      <div style="margin-top:2px">${items}</div>
-    </div>`;
-  }).join("");
-  return `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div class="section-label" style="margin:0">${isIngreso?"💵 Ingresos":"💸 Gastos"}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:${accent}">${isIngreso?"+":"-"}${fmt(total)}</div>
-    </div>
-    ${entries.length?groups:`<div style="text-align:center;color:#555;font-size:13px;padding:24px 0">Sin ${isIngreso?"ingresos":"gastos"} en este período</div>`}
-  </div>`;
-}
-function renderIngresosGastos(el,filtered){
-  el.innerHTML=`
-    <div style="font-size:15px;font-weight:700;margin-bottom:14px">Ingresos y gastos</div>
-    ${ingresoGastoBlock_("ingreso",filtered)}
-    <div style="height:14px"></div>
-    ${ingresoGastoBlock_("gasto",filtered)}
-  `;
-}
-
 function renderHistory(el,filtered){
   const sorted=[...filtered].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
   if(!sorted.length){ el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div>Sin transacciones en este período.</div>`; return; }
@@ -1716,20 +1636,15 @@ function renderSecurityScreen(el){
     <button onclick="changePassword()" style="background:#a78bfa;color:#0a0a0f;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
   </div>`;
 }
-async function changePassword(){
+function changePassword(){
   const old=document.getElementById("sec-old").value;
   const p1=document.getElementById("sec-new1").value;
   const p2=document.getElementById("sec-new2").value;
   const errEl=document.getElementById("sec-error");
-  errEl.textContent="";
   const acc=getAccount();
-  if(!acc){ errEl.textContent="No hay una cuenta activa"; return; }
+  if(!acc||old!==acc.password){ errEl.textContent="La contraseña actual no coincide"; return; }
   if(!p1||p1.length<4){ errEl.textContent="La nueva contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
-  try{
-    const r=await postToScript({action:"changePasswordAccount",email:acc.email,oldPassword:old,newPassword:p1});
-    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo actualizar la contraseña"; return; }
-  }catch(e){ errEl.textContent="No se pudo conectar con el servidor"; return; }
   acc.password=p1; saveAccount(acc); appPassword=p1; localStorage.setItem("fin_password",p1);
   showToast("Contraseña actualizada"); setView('settings');
 }
@@ -1831,6 +1746,17 @@ function getFintocRealSummary(){
     creditos, creditoTotal
   };
 }
+// Balance total (cuentas corrientes) y disponible para gastar (tarjetas + líneas)
+function getAccountTotals(){
+  const summary=getFintocRealSummary();
+  if(!summary.conectado) return {balanceCuentas:0,disponibleCredito:0,tieneCuentas:false,tieneCredito:false};
+  return {
+    balanceCuentas:summary.totalCorrientes,
+    disponibleCredito:summary.creditoTotal,
+    tieneCuentas:summary.principal||summary.resto.length>0,
+    tieneCredito:summary.creditos.length>0
+  };
+}
 function bankStyle(name){
   const n=(name||"").toLowerCase();
   if(n.includes("chile")) return{bg:"linear-gradient(135deg,#1e5fbf,#0f3d8a)",icon:"🏦"};
@@ -1899,13 +1825,13 @@ async function fetchBankRecords(silent){
   if(status) status.textContent="";
   if(!silent && !status) showToast("Actualizando movimientos...");
   try{
-    const d=await postToScript({action:"fintocSync",ns:ns_()});
+    const d=await postToScript({action:"fintocSync"});
     if(d.status==="ok"){
-      const rows=await getSheet(nsSheet_("Registros"));
+      const rows=await getSheet("Registros");
       if(rows.length>1) bankRecords=rows.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]}));
       save("fin_bank_records",bankRecords);
       try{
-        const accRows=await getSheet(nsSheet_("Cuentas"));
+        const accRows=await getSheet("Cuentas");
         if(accRows.length>1) bankAccounts=accRows.slice(1).map(row=>({cuenta:row[0],banco:row[1],numero:row[2],tipo:row[3],disponible:Number(row[4]),actual:Number(row[5]),cupo:Number(row[6])}));
         save("fin_bank_accounts",bankAccounts);
       }catch(e){}
@@ -1949,31 +1875,7 @@ async function abrirFintocWidget(){
   };
   setConnecting(true);
 
-  // En iOS, si la app está agregada a pantalla de inicio (modo standalone),
-  // el widget de Fintoc queda en blanco porque no puede abrir su ventana de
-  // login del banco dentro de ese modo. En ese caso, abrimos una página aparte
-  // en Safari normal para completar la conexión, y el resultado queda guardado
-  // en el backend (no hace falta comunicación de vuelta hacia la app).
-  const isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
-
-  if(isStandalone){
-    // En modo pantalla completa (ícono), abrir Safari lanza una app aparte a
-    // nivel de iOS: no se puede "rellenar" esa pestaña después con JS. Por eso
-    // abrimos fintoc-connect.html YA (de forma síncrona, con el toque del
-    // usuario) y es esa misma página la que pide los datos a Fintoc.
-    const url = new URL("fintoc-connect.html", location.href);
-    url.searchParams.set("ns", ns_());
-    const opened = window.open(url.toString(), "_blank");
-    if(!opened){
-      showToast("Activa \"Permitir ventanas emergentes\" para Safari en Ajustes y vuelve a intentar","err");
-    } else {
-      showToast("Se abrió Safari para conectar tu banco. Al terminar, vuelve aquí y toca 🔄 Actualizar.");
-    }
-    setConnecting(false);
-    return;
-  }
-
-  const available = await waitForFintoc(4000);
+  const available=await waitForFintoc(4000);
   if(!available){
     setConnecting(false);
     showToast("No se pudo cargar el conector de Fintoc. Revisa tu conexión a internet.","err");
@@ -1981,7 +1883,7 @@ async function abrirFintocWidget(){
   }
 
   try{
-    const d=await postToScript({action:"fintocCreateLinkIntent",ns:ns_()});
+    const d=await postToScript({action:"fintocCreateLinkIntent"});
     if(d.status!=="ok"){
       setConnecting(false);
       showToast(d.message||"No se pudo iniciar la conexión con el banco","err");
@@ -1995,7 +1897,7 @@ async function abrirFintocWidget(){
       onSuccess:async(linkIntent)=>{
         showToast("Confirmando conexión...");
         try{
-          const r=await postToScript({action:"fintocSaveLink",exchangeToken:linkIntent.exchangeToken,ns:ns_()});
+          const r=await postToScript({action:"fintocSaveLink",exchangeToken:linkIntent.exchangeToken});
           if(r.status==="ok"){
             showToast(`✓ ${r.banco||"Banco"} conectado correctamente`);
             await fetchBankRecords(true);
@@ -2013,7 +1915,8 @@ async function abrirFintocWidget(){
     widget.open();
   }catch(e){
     setConnecting(false);
-    showToast("Error al abrir el widget de Fintoc","err");
+    console.error("Error Fintoc widget:", e);
+    showToast("Error al abrir widget: "+(e && e.message ? e.message : e),"err");
   }
 }
 
@@ -2043,39 +1946,6 @@ function submitForm(){
 }
 
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-
-// ── ESTILOS DE CATEGORÍA (color + ícono) — compartidos entre el gráfico y la pestaña Ingresos/Gastos ──
-const CAT_STYLE_GASTO={
-  "Alimentación":{color:"#f87171",icon:"🍽️"},
-  "Transporte":{color:"#38bdf8",icon:"🚗"},
-  "Vivienda":{color:"#fbbf24",icon:"🏡"},
-  "Salud":{color:"#fb7185",icon:"❤️"},
-  "Entretenimiento":{color:"#c084fc",icon:"🎬"},
-  "Ropa":{color:"#facc15",icon:"👗"},
-  "Educación":{color:"#22d3ee",icon:"📚"},
-  "Servicios":{color:"#818cf8",icon:"💡"},
-  "Otro gasto":{color:"#94a3b8",icon:"📦"}
-};
-const CAT_STYLE_INGRESO={
-  "Sueldo":{color:"#4ade80",icon:"💵"},
-  "Bono":{color:"#34d399",icon:"🎁"},
-  "Freelance":{color:"#2dd4bf",icon:"💻"},
-  "Inversión":{color:"#22c55e",icon:"📈"},
-  "Regalo":{color:"#a3e635",icon:"🎉"},
-  "Ventas":{color:"#10b981",icon:"🛍️"},
-  "Reembolso":{color:"#4ade80",icon:"↩️"},
-  "Otro ingreso":{color:"#86efac",icon:"💰"}
-};
-const CUSTOM_PALETTE_=["#34d399","#f472b6","#60a5fa","#fbbf24","#a78bfa","#fb7185","#4ade80","#f97316","#2dd4bf","#e879f9"];
-function hashColor_(str){ let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return CUSTOM_PALETTE_[h%CUSTOM_PALETTE_.length]; }
-function getCategoryStyle(tipo,cat){
-  const fixedMap=tipo==="ingreso"?CAT_STYLE_INGRESO:CAT_STYLE_GASTO;
-  if(fixedMap[cat]) return fixedMap[cat];
-  const customList=tipo==="ingreso"?(customCats.ingreso||[]):(customCats.gasto||[]);
-  const custom=customList.find(c=>c.name===cat);
-  if(custom) return {color:hashColor_(cat), icon:custom.icon||"🏷️"};
-  return {color:hashColor_(cat), icon:"•"};
-}
 
 
 // ── TICKER & REMINDERS ────────────────────────────────────
@@ -2238,15 +2108,15 @@ async function manualSync(){
 async function syncToCloud(){
   if(API_URL==="PEGA_TU_URL_AQUI") return false;
   try{
-    await postToScript({sheet:nsSheet_("Transacciones"),action:"save",data:[["id","tipo","descripcion","monto","categoria","fecha"],...transactions.map(t=>[t.id,t.tipo,t.descripcion,t.monto,t.categoria,t.fecha])]});
-    await postToScript({sheet:nsSheet_("Deudas"),action:"save",data:[["id","name","total","paid","vencimiento","categoria"],...debts.map(d=>[d.id,d.name,d.total,d.paid,d.vencimiento||"",d.categoria||""])]});
-    await postToScript({sheet:nsSheet_("Metas"),action:"save",data:[["id","name","emoji","target","saved"],...goals.map(g=>[g.id,g.name,g.emoji,g.target,g.saved||0])]});
-    await postToScript({sheet:nsSheet_("MensualDebts"),action:"save",data:[["id","name","amount","categoria","pagado"],...monthlyDebts.map(d=>[d.id,d.name,d.amount,d.categoria||"",d.pagado?1:0])]});
-    await postToScript({sheet:nsSheet_("MeDeben"),action:"save",data:[["id","name","total","paid","nota","vencimiento"],...receivables.map(r=>[r.id,r.name,r.total,r.paid,r.nota||"",r.vencimiento||""])]});
+    await postToScript({sheet:"Transacciones",action:"save",data:[["id","tipo","descripcion","monto","categoria","fecha"],...transactions.map(t=>[t.id,t.tipo,t.descripcion,t.monto,t.categoria,t.fecha])]});
+    await postToScript({sheet:"Deudas",action:"save",data:[["id","name","total","paid","vencimiento","categoria"],...debts.map(d=>[d.id,d.name,d.total,d.paid,d.vencimiento||"",d.categoria||""])]});
+    await postToScript({sheet:"Metas",action:"save",data:[["id","name","emoji","target","saved"],...goals.map(g=>[g.id,g.name,g.emoji,g.target,g.saved||0])]});
+    await postToScript({sheet:"MensualDebts",action:"save",data:[["id","name","amount","categoria","pagado"],...monthlyDebts.map(d=>[d.id,d.name,d.amount,d.categoria||"",d.pagado?1:0])]});
+    await postToScript({sheet:"MeDeben",action:"save",data:[["id","name","total","paid","nota","vencimiento"],...receivables.map(r=>[r.id,r.name,r.total,r.paid,r.nota||"",r.vencimiento||""])]});
     const catsRows=[["tipo","name","icon"]];
     customCats.gasto.forEach(c=>catsRows.push(["gasto",c.name,c.icon]));
     customCats.ingreso.forEach(c=>catsRows.push(["ingreso",c.name,c.icon]));
-    await postToScript({sheet:nsSheet_("Categorias"),action:"save",data:catsRows});
+    await postToScript({sheet:"Categorias",action:"save",data:catsRows});
     return true;
   }catch(e){ console.log("Sync error",e); return false; }
 }
@@ -2254,72 +2124,46 @@ async function syncToCloud(){
 async function loadFromCloud(){
   if(API_URL==="PEGA_TU_URL_AQUI") return;
   try{
-    const d1=await getSheet(nsSheet_("Transacciones"));
+    const d1=await getSheet("Transacciones");
     if(d1.length>1) transactions=d1.slice(1).map(r=>({id:r[0],tipo:r[1],descripcion:r[2],monto:Number(r[3]),categoria:r[4],fecha:r[5]}));
-    const d2=await getSheet(nsSheet_("Deudas"));
+    const d2=await getSheet("Deudas");
     if(d2.length>1) debts=d2.slice(1).map(r=>({id:r[0],name:r[1],total:Number(r[2]),paid:Number(r[3]),vencimiento:r[4],categoria:r[5],pagos:[]}));
-    const d3=await getSheet(nsSheet_("Metas"));
+    const d3=await getSheet("Metas");
     if(d3.length>1) goals=d3.slice(1).map(r=>({id:r[0],name:r[1],emoji:r[2],target:Number(r[3]),saved:Number(r[4]),deposits:[]}));
-    const d4=await getSheet(nsSheet_("MensualDebts"));
+    const d4=await getSheet("MensualDebts");
     if(d4.length>1) monthlyDebts=d4.slice(1).map(r=>({id:r[0],name:r[1],amount:Number(r[2]),categoria:r[3],pagado:Number(r[4])===1}));
-    const d5=await getSheet(nsSheet_("MeDeben"));
+    const d5=await getSheet("MeDeben");
     if(d5.length>1) receivables=d5.slice(1).map(r=>({id:r[0],name:r[1],total:Number(r[2]),paid:Number(r[3]),nota:r[4],vencimiento:r[5],cobros:[]}));
-    const d6=await getSheet(nsSheet_("Categorias"));
+    const d6=await getSheet("Categorias");
     if(d6.length>1){
       const cc={ingreso:[],gasto:[]};
       d6.slice(1).forEach(r=>{ if(cc[r[0]]) cc[r[0]].push({name:r[1],icon:r[2]}); });
       customCats=cc;
     }
-    const d7=await getSheet(nsSheet_("Registros"));
+    const d7=await getSheet("Registros");
     if(d7.length>1) bankRecords=d7.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]}));
     save("fin_tx",transactions); save("fin_debts",debts); save("fin_goals",goals); save("fin_monthly_debts",monthlyDebts); save("fin_receivables",receivables); save("fin_custom_cats",customCats); save("fin_bank_records",bankRecords);
     render(); renderTicker();
   }catch(e){console.log("Load error",e);}
 }
 
-// ── NAMESPACE POR USUARIO (evita que distintas cuentas se pisen los datos) ──
-function ns_(){
-  const acc=getAccount();
-  const key=(acc&&acc.email)?acc.email.toLowerCase().trim():"sin_cuenta";
-  return key.replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,40)||"sin_cuenta";
-}
-function nsSheet_(name){ return name+"__"+ns_(); }
-
 // ── CUENTA (nombre, usuario, correo, contraseña) — guardada en el dispositivo
 function getAccount(){ return load("fin_account", null); }
 function saveAccount(acc){ save("fin_account", acc); }
 let appPassword = (getAccount()||{}).password || "1234"; // compat: usada también por Face ID
 
-async function checkPassword(){
+function checkPassword(){
   const email=document.getElementById("lock-email").value.trim().toLowerCase();
   const pass=document.getElementById("lock-input").value;
   const errEl=document.getElementById("lock-error");
   errEl.textContent="";
-  if(!email||!pass){ errEl.textContent="Ingresa tu correo y contraseña"; return; }
-  const btn=document.getElementById("lock-btn");
-  if(btn){ btn.disabled=true; btn.textContent="Entrando..."; }
-  try{
-    let r=await postToScript({action:"loginAccount",email,password:pass});
-    if(r.status!=="ok"){
-      // Migración: si existe una cuenta creada antes (guardada solo en este dispositivo)
-      // con las mismas credenciales, la registramos ahora en el servidor automáticamente.
-      const localAcc=getAccount();
-      if(localAcc && localAcc.email && localAcc.email.toLowerCase()===email && localAcc.password===pass){
-        const reg=await postToScript({action:"registerAccount",name:localAcc.name,username:localAcc.username,email,password:pass});
-        if(reg.status==="ok") r={status:"ok",name:localAcc.name,username:localAcc.username,email};
-      }
-    }
-    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo iniciar sesión"; return; }
-    saveAccount({name:r.name,username:r.username,email:r.email,password:pass});
-    appPassword=pass;
-    sessionStorage.setItem("fin_unlocked","1");
-    document.getElementById("lock-screen").classList.add("hidden");
-    initialSync();
-  }catch(e){
-    errEl.textContent="No se pudo conectar con el servidor. Revisa tu conexión.";
-  }finally{
-    if(btn){ btn.disabled=false; btn.textContent="Entrar"; }
-  }
+  const acc=getAccount();
+  if(!acc){ errEl.textContent="No hay una cuenta creada en este dispositivo. Crea una cuenta."; return; }
+  if(email!==acc.email.toLowerCase()){ errEl.textContent="Correo no encontrado"; return; }
+  if(pass!==acc.password){ errEl.textContent="Contraseña incorrecta"; return; }
+  appPassword=acc.password;
+  sessionStorage.setItem("fin_unlocked","1");
+  document.getElementById("lock-screen").classList.add("hidden");
 }
 document.getElementById("lock-input").addEventListener("keydown",e=>{ if(e.key==="Enter") checkPassword(); });
 document.getElementById("lock-email").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("lock-input").focus(); });
@@ -2333,10 +2177,10 @@ function showRegister(){
   document.getElementById("lock-view-register").style.display="flex";
   document.getElementById("reg-error").textContent="";
 }
-async function registerAccount(){
+function registerAccount(){
   const name=document.getElementById("reg-name").value.trim();
   const username=document.getElementById("reg-username").value.trim();
-  const email=document.getElementById("reg-email").value.trim().toLowerCase();
+  const email=document.getElementById("reg-email").value.trim();
   const p1=document.getElementById("reg-pass").value;
   const p2=document.getElementById("reg-pass2").value;
   const errEl=document.getElementById("reg-error");
@@ -2346,10 +2190,6 @@ async function registerAccount(){
   if(!email||!email.includes("@")){ errEl.textContent="Ingresa un correo válido"; return; }
   if(!p1||p1.length<4){ errEl.textContent="La contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
-  try{
-    const r=await postToScript({action:"registerAccount",name,username,email,password:p1});
-    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo crear la cuenta"; return; }
-  }catch(e){ errEl.textContent="No se pudo conectar con el servidor. Revisa tu conexión."; return; }
   const acc={name,username,email,password:p1};
   saveAccount(acc);
   appPassword=p1;
@@ -2357,7 +2197,6 @@ async function registerAccount(){
   sessionStorage.setItem("fin_unlocked","1");
   document.getElementById("lock-screen").classList.add("hidden");
   showToast("Cuenta creada. ¡Bienvenido a Zynto!");
-  initialSync();
 }
 
 // RECUPERAR / CREAR CONTRASEÑA POR CORREO
@@ -2404,7 +2243,7 @@ async function confirmResetPassword(){
   if(!p1||p1.length<4){ errEl.textContent="La contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
   try{
-    const d=await postToScript({action:"verifyResetCode",email:resetEmailPending,code,newPassword:p1});
+    const d=await postToScript({action:"verifyResetCode",email:resetEmailPending,code});
     if(d.status==="ok"){
       appPassword=p1;
       localStorage.setItem("fin_password",appPassword);
