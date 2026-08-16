@@ -537,7 +537,11 @@ function openModal(title,bodyHtml,confirmLabel,confirmClass,action,data){
 function closeModal(){ modalAction=null; modalData={}; document.getElementById("modal-overlay").classList.remove("show"); }
 
 function modalConfirm(){
-  if(modalAction==="deleteGoal"){
+  if(modalAction==="fintocReturn"){
+    closeModal();
+    setView("dashboard");
+    fetchBankRecords(true);
+  } else if(modalAction==="deleteGoal"){
     goals=goals.filter(g=>g.id!==modalData.id); save("fin_goals",goals); syncToCloud();
     showToast("Meta eliminada","err"); closeModal(); render();
   } else if(modalAction==="deleteTx"){
@@ -1904,6 +1908,17 @@ function waitForFintoc(timeoutMs){
   });
 }
 
+function openFintocReturnModal(banco){
+  openModal(
+    "¡Banco conectado!",
+    `<div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:38px;margin-bottom:8px">✓</div>
+      <div style="font-size:14px;color:#cbd5e1;line-height:1.5">${esc(banco||"Tu banco")} ya está enlazado.<br>Volveremos a Inicio para mostrar tu tarjeta y su saldo disponible.</div>
+    </div>`,
+    "Volver a la app", "primary", "fintocReturn", {}
+  );
+}
+
 async function abrirFintocWidget(){
   const box=document.getElementById("add-card-box");
   const icon=document.getElementById("add-card-icon");
@@ -1963,8 +1978,11 @@ async function abrirFintocWidget(){
         try{
           const r=await postToScript({action:"fintocSaveLink",exchangeToken:linkIntent.exchangeToken,ns:ns_()});
           if(r.status==="ok"){
-            showToast(`✓ ${r.banco||"Banco"} conectado correctamente`);
             await fetchBankRecords(true);
+            // Cerramos el widget de Fintoc y mostramos un retorno claro a la app.
+            if(typeof widget.hide==="function") widget.hide();
+            setConnecting(false);
+            openFintocReturnModal(r.banco);
           } else {
             showToast(r.message||"No se pudo guardar la conexión","err");
           }
