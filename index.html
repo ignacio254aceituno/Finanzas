@@ -938,7 +938,8 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   animateNumber(document.getElementById("balance-amount"),0,balance);
 }
 function buildKaneDonut(entries,totalGasto,getStyle){
-  const CX=160,CY=128,R=68,STROKE=18,GAP=3;
+  const VB_W=320, VB_H=320;
+  const CX=160,CY=140,R=56,STROKE=16,GAP=3;
   const circumference=2*Math.PI*R;
   const top=entries.slice(0,4);
   const rest=entries.slice(4);
@@ -986,23 +987,26 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   });
 
   // Líneas guía + etiquetas tipo "pill" alrededor del donut (como redes sociales)
+  const fw=92, fh=38, PAD=4;
   let guides="";
   radial.forEach(r=>{
     const rad=r.angle*Math.PI/180;
     const ringX=CX+R*Math.cos(rad), ringY=CY+R*Math.sin(rad);
-    const outX=CX+(R+20)*Math.cos(rad), outY=CY+(R+20)*Math.sin(rad);
+    const outX=CX+(R+14)*Math.cos(rad), outY=CY+(R+14)*Math.sin(rad);
     const side=Math.cos(rad)>=0?1:-1;
-    const stubX=CX+side*(R+66);
-    const stubY=Math.max(20,Math.min(outY, 300-46));
-    guides+=`<path d="M${ringX.toFixed(1)},${ringY.toFixed(1)} L${outX.toFixed(1)},${outY.toFixed(1)} L${stubX.toFixed(1)},${stubY.toFixed(1)}" fill="none" stroke="${r.color}" stroke-width="1.4" opacity="0.65"/>`;
-    guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.5" fill="${r.color}"/>`;
-    const fw=108, fh=42;
+    let stubX=CX+side*(R+42);
+    // nunca dejar que la etiqueta se salga del viewBox
+    stubX=side>0?Math.min(stubX,VB_W-fw-PAD):Math.max(stubX,fw+PAD);
+    const stubY=Math.max(fh/2+PAD,Math.min(outY, VB_H-fh/2-PAD));
+    guides+=`<path d="M${ringX.toFixed(1)},${ringY.toFixed(1)} L${outX.toFixed(1)},${outY.toFixed(1)} L${stubX.toFixed(1)},${stubY.toFixed(1)}" fill="none" stroke="${r.color}" stroke-width="1.2" opacity="0.6"/>`;
+    guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.2" fill="${r.color}"/>`;
     const fx=side>0?stubX+3:stubX-3-fw;
     const fy=stubY-fh/2;
+    const nombreCorto=r.cat.length>12?r.cat.slice(0,11)+"…":r.cat;
     guides+=`<foreignObject x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="${fw}" height="${fh}">
       <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${side>0?"flex-start":"flex-end"};font-family:inherit">
-        <div style="display:inline-flex;align-items:center;gap:5px;background:${r.color}22;border:1.3px solid ${r.color}77;border-radius:20px;padding:4px 10px;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;overflow:hidden;text-overflow:ellipsis">${r.icon} ${esc(r.cat.toUpperCase())}</div>
-        <div style="font-size:10px;color:#999;margin-top:3px;padding:0 2px">(${r.pct}%)</div>
+        <div style="display:inline-flex;align-items:center;gap:4px;background:${r.color}22;border:1px solid ${r.color}77;border-radius:16px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
+        <div style="font-size:9px;color:#999;margin-top:2px;padding:0 2px">(${r.pct}%)</div>
       </div>
     </foreignObject>`;
   });
@@ -1031,17 +1035,18 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   legend+=`</div></div>`;
   
   // Center total con efecto
-  const center=`<div style="position:absolute;top:45.7%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
-    <div style="font-size:24px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
+  const centerTopPct=(CY/VB_H*100).toFixed(1);
+  const center=`<div style="position:absolute;top:${centerTopPct}%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
+    <div style="font-size:22px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
     <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
   </div>`;
   
-  return `<div style="width:100%;max-width:400px;margin:8px auto 0">
+  return `<div style="width:100%;max-width:380px;margin:8px auto 0">
     <style>
       ${animationStyles}
     </style>
-    <div style="position:relative;width:100%;aspect-ratio:320/300">
-      <svg viewBox="0 0 320 300" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
+    <div style="position:relative;width:100%;aspect-ratio:${VB_W}/${VB_H}">
+      <svg viewBox="0 0 ${VB_W} ${VB_H}" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,.4))">
         ${shadows}
         ${segs}
         ${guides}
@@ -1711,15 +1716,20 @@ function renderSecurityScreen(el){
     <button onclick="changePassword()" style="background:#a78bfa;color:#0a0a0f;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
   </div>`;
 }
-function changePassword(){
+async function changePassword(){
   const old=document.getElementById("sec-old").value;
   const p1=document.getElementById("sec-new1").value;
   const p2=document.getElementById("sec-new2").value;
   const errEl=document.getElementById("sec-error");
+  errEl.textContent="";
   const acc=getAccount();
-  if(!acc||old!==acc.password){ errEl.textContent="La contraseña actual no coincide"; return; }
+  if(!acc){ errEl.textContent="No hay una cuenta activa"; return; }
   if(!p1||p1.length<4){ errEl.textContent="La nueva contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
+  try{
+    const r=await postToScript({action:"changePasswordAccount",email:acc.email,oldPassword:old,newPassword:p1});
+    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo actualizar la contraseña"; return; }
+  }catch(e){ errEl.textContent="No se pudo conectar con el servidor"; return; }
   acc.password=p1; saveAccount(acc); appPassword=p1; localStorage.setItem("fin_password",p1);
   showToast("Contraseña actualizada"); setView('settings');
 }
@@ -2280,19 +2290,36 @@ function getAccount(){ return load("fin_account", null); }
 function saveAccount(acc){ save("fin_account", acc); }
 let appPassword = (getAccount()||{}).password || "1234"; // compat: usada también por Face ID
 
-function checkPassword(){
+async function checkPassword(){
   const email=document.getElementById("lock-email").value.trim().toLowerCase();
   const pass=document.getElementById("lock-input").value;
   const errEl=document.getElementById("lock-error");
   errEl.textContent="";
-  const acc=getAccount();
-  if(!acc){ errEl.textContent="No hay una cuenta creada en este dispositivo. Crea una cuenta."; return; }
-  if(email!==acc.email.toLowerCase()){ errEl.textContent="Correo no encontrado"; return; }
-  if(pass!==acc.password){ errEl.textContent="Contraseña incorrecta"; return; }
-  appPassword=acc.password;
-  sessionStorage.setItem("fin_unlocked","1");
-  document.getElementById("lock-screen").classList.add("hidden");
-  initialSync();
+  if(!email||!pass){ errEl.textContent="Ingresa tu correo y contraseña"; return; }
+  const btn=document.getElementById("lock-btn");
+  if(btn){ btn.disabled=true; btn.textContent="Entrando..."; }
+  try{
+    let r=await postToScript({action:"loginAccount",email,password:pass});
+    if(r.status!=="ok"){
+      // Migración: si existe una cuenta creada antes (guardada solo en este dispositivo)
+      // con las mismas credenciales, la registramos ahora en el servidor automáticamente.
+      const localAcc=getAccount();
+      if(localAcc && localAcc.email && localAcc.email.toLowerCase()===email && localAcc.password===pass){
+        const reg=await postToScript({action:"registerAccount",name:localAcc.name,username:localAcc.username,email,password:pass});
+        if(reg.status==="ok") r={status:"ok",name:localAcc.name,username:localAcc.username,email};
+      }
+    }
+    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo iniciar sesión"; return; }
+    saveAccount({name:r.name,username:r.username,email:r.email,password:pass});
+    appPassword=pass;
+    sessionStorage.setItem("fin_unlocked","1");
+    document.getElementById("lock-screen").classList.add("hidden");
+    initialSync();
+  }catch(e){
+    errEl.textContent="No se pudo conectar con el servidor. Revisa tu conexión.";
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="Entrar"; }
+  }
 }
 document.getElementById("lock-input").addEventListener("keydown",e=>{ if(e.key==="Enter") checkPassword(); });
 document.getElementById("lock-email").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("lock-input").focus(); });
@@ -2306,10 +2333,10 @@ function showRegister(){
   document.getElementById("lock-view-register").style.display="flex";
   document.getElementById("reg-error").textContent="";
 }
-function registerAccount(){
+async function registerAccount(){
   const name=document.getElementById("reg-name").value.trim();
   const username=document.getElementById("reg-username").value.trim();
-  const email=document.getElementById("reg-email").value.trim();
+  const email=document.getElementById("reg-email").value.trim().toLowerCase();
   const p1=document.getElementById("reg-pass").value;
   const p2=document.getElementById("reg-pass2").value;
   const errEl=document.getElementById("reg-error");
@@ -2319,6 +2346,10 @@ function registerAccount(){
   if(!email||!email.includes("@")){ errEl.textContent="Ingresa un correo válido"; return; }
   if(!p1||p1.length<4){ errEl.textContent="La contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
+  try{
+    const r=await postToScript({action:"registerAccount",name,username,email,password:p1});
+    if(r.status!=="ok"){ errEl.textContent=r.message||"No se pudo crear la cuenta"; return; }
+  }catch(e){ errEl.textContent="No se pudo conectar con el servidor. Revisa tu conexión."; return; }
   const acc={name,username,email,password:p1};
   saveAccount(acc);
   appPassword=p1;
@@ -2373,7 +2404,7 @@ async function confirmResetPassword(){
   if(!p1||p1.length<4){ errEl.textContent="La contraseña debe tener al menos 4 caracteres"; return; }
   if(p1!==p2){ errEl.textContent="Las contraseñas no coinciden"; return; }
   try{
-    const d=await postToScript({action:"verifyResetCode",email:resetEmailPending,code});
+    const d=await postToScript({action:"verifyResetCode",email:resetEmailPending,code,newPassword:p1});
     if(d.status==="ok"){
       appPassword=p1;
       localStorage.setItem("fin_password",appPassword);
