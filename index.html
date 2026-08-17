@@ -15,6 +15,12 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html { height: 100%; overflow: hidden; }
     body { font-family: 'DM Sans', sans-serif; background: #0a0a0f; color: #f0f0f5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    /* Modo claro: como casi todo el diseño usa colores fijos (no variables),
+       se invierte toda la pantalla y se corrige de vuelta en imágenes/emoji
+       para que no salgan con colores raros. Transición suave al cambiar. */
+    body { transition: filter .25s ease; }
+    body.light-mode { filter: invert(1) hue-rotate(180deg); background:#fff; }
+    body.light-mode img, body.light-mode svg image { filter: invert(1) hue-rotate(180deg); }
     input, select, button { font-family: inherit; outline: none; border: none; -webkit-appearance: none; }
     button { cursor: pointer; }
     ::-webkit-scrollbar { display: none; }
@@ -345,8 +351,7 @@
 
 
 <div id="lock-screen">
-  <div id="lock-icon">🔒</div>
-  <div style="color:#fff;font-weight:700;font-size:18px">Finanzas</div>
+  <div style="font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px">Z<span style="color:#a3c46a">y</span>nto</div>
 
   <div id="lock-view-login" class="lock-view" style="display:flex">
     <input id="lock-email" class="lock-field" type="email" placeholder="Correo electrónico" autocomplete="username" />
@@ -470,6 +475,7 @@ const GOAL_EMOJIS = ["🏖️","🚗","🏠","💻","✈️","🎓","💍","🏋
 function load(k,def){ try{ return JSON.parse(localStorage.getItem(k)||"null")??def; }catch{ return def; } }
 function save(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
+let tutorialStep=0;
 let transactions = load("fin_tx",[]);
 let goals        = load("fin_goals",[]);
 // debt: {id, name, total, paid, vencimiento, categoria, pagos:[{date,amount}]}
@@ -684,6 +690,7 @@ function render(){
   else if(currentView==="debts") renderDebts(el);
   else if(currentView==="tools") renderTools(el);
   else if(currentView==="ingresos") renderIngresosGastos(el,filtered);
+  else if(currentView==="tutorial") renderTutorial(el);
   else if(currentView==="settings") renderSettings(el);
   else if(currentView==="account") renderAccountScreen(el);
   else if(currentView==="security") renderSecurityScreen(el);
@@ -695,12 +702,62 @@ function tipoLabel(tipo){
   return{checking_account:"Cuenta Corriente",savings_account:"Cuenta de Ahorro",sight_account:"Cuenta Vista",
     line_of_credit:"Línea de Crédito",credit_card:"Tarjeta de Crédito"}[tipo]||"Cuenta";
 }
+// ── DETECCIÓN DE CUOTAS POR TARJETA (a partir de los movimientos reales de Fintoc) ──
+// Busca patrones como "3/12", "03/12" o "3 de 12" en las descripciones de las
+// compras de una cuenta/tarjeta específica, y agrupa por compra (mismo comercio)
+// para saber cuántas cuotas van pagadas y cuántas faltan.
+function parseCuotasForCuenta(cuentaName){
+  const CUOTA_RE=/\(?\b(\d{1,2})\s*(?:\/|de)\s*(\d{1,2})\)?/i;
+  const grupos={};
+  bankRecords.filter(r=>r.cuenta===cuentaName && r.monto<0).forEach(r=>{
+    const desc=r.descripcion||"";
+    const m=desc.match(CUOTA_RE);
+    if(!m) return;
+    const actual=parseInt(m[1],10), total=parseInt(m[2],10);
+    if(!total||total<2||total>60||actual>total) return; // filtra falsos positivos (fechas, folios, etc.)
+    const base=desc.replace(CUOTA_RE,"").replace(/[-–—•|]+$/,"").trim().toUpperCase()||desc;
+    const key=base;
+    if(!grupos[key] || (r.fecha||"")>(grupos[key].fecha||"")){
+      grupos[key]={nombre:base,actual,total,monto:Math.abs(r.monto),fecha:r.fecha||""};
+    }
+  });
+  return Object.values(grupos).sort((a,b)=>(b.total-b.actual)-(a.total-a.actual));
+}
+function buildCuotasCard(c){
+  const cuotasList=parseCuotasForCuenta(c.cuenta);
+  if(!cuotasList.length) return "";
+  const totalMes=cuotasList.reduce((s,x)=>s+x.monto,0);
+  const rows=cuotasList.map(x=>{
+    const restantes=x.total-x.actual;
+    const pct=Math.round((x.actual/x.total)*100);
+    return `<div style="padding:9px 0;border-bottom:1px solid #1e1e28">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:12.5px;font-weight:700;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%">${esc(x.nombre)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12.5px;font-weight:800;color:#f0f0f5">${fmt(x.monto)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;height:5px;background:#1a1a24;border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a78bfa,#6366f1);border-radius:3px"></div>
+        </div>
+        <div style="font-size:10.5px;color:#999;white-space:nowrap">${x.actual} de ${x.total}${restantes>0?` · faltan ${restantes}`:" · última cuota"}</div>
+      </div>
+    </div>`;
+  }).join("");
+  return `<div class="card" style="margin-top:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div class="section-label" style="margin:0">📊 Cuotas — ${esc(c.banco||c.cuenta)} •••• ${c.numero?String(c.numero).slice(-4):""}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:#a78bfa">${fmt(totalMes)}/mes</div>
+    </div>
+    ${rows}
+  </div>`;
+}
 function buildBigCard(c,i){
   const style=bankStyle(c.banco||c.cuenta);
   const esCredito=(c.tipo||"")==="credit_card";
-  const montoPrincipal=esCredito?(c.cupo!=null&&!isNaN(c.cupo)?c.cupo:c.disponible):c.disponible;
-  const tieneMonto=montoPrincipal!=null && !isNaN(montoPrincipal);
-  const label=esCredito?"CUPO DISPONIBLE":"DISPONIBLE";
+  const disponible=c.disponible;
+  const cupoTotal=c.cupo;
+  const tieneDisponible=disponible!=null && !isNaN(disponible);
+  const tieneCupo=esCredito && cupoTotal!=null && !isNaN(cupoTotal);
   const ult4=c.numero?String(c.numero).slice(-4):"••••";
   const delay=(i||0)*0.06;
   const cardKey=esc((c.cuenta||"").replace(/'/g,"\\'"));
@@ -711,29 +768,31 @@ function buildBigCard(c,i){
       </button>
     </div>
     <div class="swipe-content" style="display:flex;align-items:center;gap:14px;padding:10px 0;background:#0a0a0f;position:relative;touch-action:pan-y" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event,this)" ontouchend="swipeEnd(event,this)">
-    <div style="width:148px;height:92px;border-radius:14px;background:${style.bg};padding:12px 13px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative;overflow:hidden">
+    <div style="width:164px;height:104px;border-radius:15px;background:${style.bg};padding:13px 14px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
       <div style="position:absolute;bottom:-26px;left:-14px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;z-index:1">
-        <div style="min-width:0">
+        <div style="min-width:0;display:flex;align-items:center;gap:7px">
           ${style.domain?
-            `<div style="width:26px;height:26px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.35)">
-               <img src="https://www.google.com/s2/favicons?domain=${style.domain}&sz=128" alt="${esc(c.banco||c.cuenta)}" style="width:18px;height:18px;object-fit:contain;display:block" onerror="this.onerror=function(){this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'};this.src='https://icons.duckduckgo.com/ip3/${style.domain}.ico'" />
+            `<div style="width:28px;height:28px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.35);flex-shrink:0">
+               <img src="https://www.google.com/s2/favicons?domain=${style.domain}&sz=128" alt="${esc(c.banco||c.cuenta)}" style="width:19px;height:19px;object-fit:contain;display:block" onerror="this.onerror=function(){this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'};this.src='https://icons.duckduckgo.com/ip3/${style.domain}.ico'" />
              </div>
-             <div style="display:none;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`
-            :`<div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff">${esc(style.mono||"$")}</div>`}
+             <div style="display:none;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:9.5px;font-weight:900;color:#fff;flex-shrink:0">${esc(style.mono||"$")}</div>`
+            :`<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:900;color:#fff;flex-shrink:0">${esc(style.mono||"$")}</div>`}
+          <div style="font-size:11.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.banco||c.cuenta)}</div>
         </div>
-        <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;margin-top:3px"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;margin-top:3px;margin-left:4px"></div>
       </div>
       <div style="z-index:1">
         <div style="font-size:8.5px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">${tipoLabel(c.tipo)}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.06em">•••• ${ult4}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13.5px;font-weight:700;color:#fff;letter-spacing:.06em">•••• ${ult4}</div>
       </div>
     </div>
     <div style="flex:1;min-width:0">
-      <div style="font-size:9.5px;color:#666;letter-spacing:.04em">${tieneMonto?label:"GASTADO ESTE MES"}</div>
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:19px;color:${tieneMonto?"#4ade80":"#f87171"};margin-bottom:5px">${tieneMonto?fmt(montoPrincipal):fmt(c.gastado)}</div>
-      ${esCredito?`<div style="font-size:10.5px;color:#888">Gastado: ${fmt(c.gastado)}${c.cuotas>0?` · Cuotas: ${fmt(c.cuotas)}`:""}</div>`:""}
+      <div style="font-size:9.5px;color:#666;letter-spacing:.04em">DISPONIBLE</div>
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:18px;color:${tieneDisponible?(disponible>=0?"#4ade80":"#f87171"):"#666"};margin-bottom:3px">${tieneDisponible?fmt(disponible):"—"}</div>
+      ${tieneCupo?`<div style="font-size:10.5px;color:#888">Cupo total: <b style="color:#aaa">${fmt(cupoTotal)}</b></div>`:""}
+      ${esCredito&&c.gastado>0?`<div style="font-size:10.5px;color:#888;margin-top:2px">Gastado este mes: ${fmt(c.gastado)}</div>`:""}
     </div>
     </div>
   </div>`;
@@ -768,6 +827,7 @@ function buildCardsListInicio(){
   </div>`;
   const lastSync=load("fin_bank_last_sync",null);
   const syncLabel=lastSync?`Actualizado ${relTime(lastSync)}`:(cardsSummary.length?"Sin sincronizar aún":"");
+  const cuotasBlocks=credito.map(buildCuotasCard).join("");
   return `<div class="card" style="animation-delay:.01s">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
       <div class="section-label" style="margin-bottom:0">Tus tarjetas</div>
@@ -777,7 +837,8 @@ function buildCardsListInicio(){
     </div>
     ${syncLabel?`<div style="font-size:10.5px;color:#4a4a5a;margin-bottom:12px">${syncLabel}</div>`:`<div style="margin-bottom:2px"></div>`}
     ${rows}
-  </div>`;
+  </div>
+  ${cuotasBlocks}`;
 }
 function relTime(iso){
   const diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
@@ -796,7 +857,8 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   const fc=getForecast();
   const pendingDebts=debts.filter(d=>d.paid<d.total);
 
-  let html=`
+  let html=buildCardsListInicio();
+  html+=`
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
     <div id="balance-label">Balance real (incluye deudas)</div>
@@ -863,7 +925,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
     }
   }
 
-  html+=buildCardsListInicio();
+  // (las tarjetas ya se agregaron arriba, antes del balance)
 
   // Diferencia real: Ingresos vs TODAS las deudas pendientes (pagadas o no)
   const allDebtTotal = debts.reduce((s,d)=>s+(d.total-d.paid),0);
@@ -1008,26 +1070,26 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   });
 
   // Líneas guía + etiquetas tipo "pill" alrededor del donut (como redes sociales)
-  const fw=92, fh=38, PAD=4;
+  const fw=98, fh=36, PAD=4;
   let guides="";
   radial.forEach(r=>{
     const rad=r.angle*Math.PI/180;
     const ringX=CX+R*Math.cos(rad), ringY=CY+R*Math.sin(rad);
-    const outX=CX+(R+14)*Math.cos(rad), outY=CY+(R+14)*Math.sin(rad);
     const side=Math.cos(rad)>=0?1:-1;
-    let stubX=CX+side*(R+42);
+    let stubX=CX+side*(R+48);
     // nunca dejar que la etiqueta se salga del viewBox
     stubX=side>0?Math.min(stubX,VB_W-fw-PAD):Math.max(stubX,fw+PAD);
+    const outY=CY+(R+48)*Math.sin(rad);
     const stubY=Math.max(fh/2+PAD,Math.min(outY, VB_H-fh/2-PAD));
-    guides+=`<path d="M${ringX.toFixed(1)},${ringY.toFixed(1)} L${outX.toFixed(1)},${outY.toFixed(1)} L${stubX.toFixed(1)},${stubY.toFixed(1)}" fill="none" stroke="${r.color}" stroke-width="1.2" opacity="0.6"/>`;
+    guides+=`<line x1="${ringX.toFixed(1)}" y1="${ringY.toFixed(1)}" x2="${stubX.toFixed(1)}" y2="${stubY.toFixed(1)}" stroke="#aaaaaa" stroke-width="1" opacity="0.55"/>`;
     guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.2" fill="${r.color}"/>`;
-    const fx=side>0?stubX+3:stubX-3-fw;
+    const fx=side>0?stubX:stubX-fw;
     const fy=stubY-fh/2;
-    const nombreCorto=r.cat.length>12?r.cat.slice(0,11)+"…":r.cat;
+    const nombreCorto=r.cat.length>13?r.cat.slice(0,12)+"…":r.cat;
     guides+=`<foreignObject x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="${fw}" height="${fh}">
       <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${side>0?"flex-start":"flex-end"};font-family:inherit">
-        <div style="display:inline-flex;align-items:center;gap:4px;background:${r.color}22;border:1px solid ${r.color}77;border-radius:16px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
-        <div style="font-size:9px;color:#999;margin-top:2px;padding:0 2px">(${r.pct}%)</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:${r.color}e6;border-radius:16px;padding:5px 11px;font-size:10px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35)">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:3px;padding:0 2px">(${r.pct}%)</div>
       </div>
     </foreignObject>`;
   });
@@ -1628,12 +1690,58 @@ function stSection(title,rowsHtml){
 function stDivider(){ return `<div style="height:1px;background:#22222e;margin-left:56px"></div>`; }
 
 let glassEffect = load("fin_glass_effect", true);
+let lightMode = load("fin_light_mode", false);
+function applyLightMode(){ document.body.classList.toggle("light-mode", lightMode); }
+function toggleLightMode(){ lightMode=!lightMode; save("fin_light_mode",lightMode); applyLightMode(); render(); }
+applyLightMode();
 function toggleGlassEffect(){ glassEffect=!glassEffect; save("fin_glass_effect",glassEffect); render(); }
+
+// ── TUTORIAL PARA NUEVOS USUARIOS ────────────────────────────
+const TUTORIAL_STEPS=[
+  {icon:"👋",title:"¡Bienvenido a Zynto!",desc:"Tu app para controlar tus finanzas: cuentas bancarias, deudas, ahorro y gastos, todo en un solo lugar. Este tutorial te muestra cada parte en menos de 2 minutos."},
+  {icon:"🏠",title:"Inicio",desc:"Tu pantalla principal. Arriba ves tu balance del mes (ingresos, gastos, deudas) y el 💰 REAL, que descuenta automáticamente todo lo que ya gastaste en deudas pagadas."},
+  {icon:"💳",title:"Conecta tu banco",desc:"Toca \"Agregar banco o tarjeta\" para vincular tu cuenta real vía Fintoc (conexión segura). Se abre una sola vez por banco — después, tus movimientos se sincronizan solos."},
+  {icon:"🔄",title:"Actualizar movimientos",desc:"El botón 🔄 arriba trae tus últimos movimientos bancarios reales. Si conectas un banco desde el ícono de la app, se actualiza solo al volver — no hace falta que hagas nada."},
+  {icon:"👈",title:"Ordena tus tarjetas",desc:"Desliza cualquier tarjeta hacia la izquierda para ocultarla de la app (por ejemplo, cuentas en $0 que no usas). El banco sigue conectado, solo se oculta la vista."},
+  {icon:"🍩",title:"Gastos por categoría",desc:"El gráfico circular te muestra en qué se te va la plata, con líneas que apuntan a cada categoría. Incluye tanto tus gastos manuales como las deudas del mes."},
+  {icon:"💵",title:"Ingresos y Gastos",desc:"Pestaña dedicada donde ves, separados y con color por categoría (sueldo, comida, transporte, etc.), todos tus ingresos y gastos con el detalle de cada movimiento."},
+  {icon:"💳",title:"Deudas",desc:"Registra deudas grandes (ej. un crédito) y ve pagos parciales. Cuando la pagas al 100%, se descuenta automáticamente de tu balance real."},
+  {icon:"📅",title:"Del mes",desc:"Gastos fijos que se repiten cada mes (arriendo, servicios, gimnasio). Márcalos como pagados a medida que los vas cubriendo."},
+  {icon:"🎯",title:"Ahorro",desc:"Crea metas de ahorro (ej. vacaciones, un computador) y ve tu progreso hacia cada una."},
+  {icon:"🛠️",title:"Herramientas",desc:"Crea tus propias categorías con ícono propio, y revisa el detalle de tus movimientos bancarios importados."},
+  {icon:"⚙️",title:"Configuración",desc:"Cambia tu contraseña, activa/desactiva efectos visuales, y vuelve a ver este tutorial cuando quieras desde aquí."},
+  {icon:"🔒",title:"Tu cuenta es tuya",desc:"Tu contraseña nunca se guarda como texto — queda protegida con cifrado. Puedes iniciar sesión desde cualquier dispositivo con tu correo y contraseña."},
+];
+function renderTutorial(el){
+  const step=Math.max(0,Math.min(tutorialStep,TUTORIAL_STEPS.length-1));
+  const s=TUTORIAL_STEPS[step];
+  const isFirst=step===0, isLast=step===TUTORIAL_STEPS.length-1;
+  const dots=TUTORIAL_STEPS.map((_,i)=>`<div style="width:${i===step?18:6}px;height:6px;border-radius:3px;background:${i===step?"#a78bfa":"#333"};transition:.2s"></div>`).join("");
+  el.innerHTML=`
+  <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+    <div onclick="closeTutorial()" style="font-size:12.5px;color:#666;cursor:pointer;padding:6px">Saltar</div>
+  </div>
+  <div style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 6px">
+    <div style="font-size:52px;margin-bottom:18px">${s.icon}</div>
+    <div style="font-size:19px;font-weight:800;margin-bottom:10px">${esc(s.title)}</div>
+    <div style="font-size:14px;color:#aaa;line-height:1.55;max-width:320px">${esc(s.desc)}</div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:5px;margin-bottom:18px">${dots}</div>
+  <div style="display:flex;gap:10px">
+    ${!isFirst?`<button onclick="tutorialStep--;render()" style="flex:1;background:#16161e;border:1px solid #2a2a3a;color:#ccc;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Atrás</button>`:""}
+    <button onclick="${isLast?"closeTutorial()":"tutorialStep++;render()"}" style="flex:2;background:#a78bfa;border:none;color:#0a0a0f;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer">${isLast?"Empezar a usar Zynto":"Siguiente"}</button>
+  </div>`;
+}
+function startTutorial(){ tutorialStep=0; save("fin_tutorial_seen",true); setView("tutorial"); }
+function closeTutorial(){ save("fin_tutorial_seen",true); setView("dashboard"); }
 
 function renderSettings(el){
   const acc=getAccount()||{name:"Usuario",username:"usuario",email:""};
   const glass=`<div onclick="toggleGlassEffect()" style="width:44px;height:26px;border-radius:14px;background:${glassEffect?'#4ade80':'#333'};position:relative;cursor:pointer;transition:.2s">
      <div style="position:absolute;top:2px;left:${glassEffect?'20px':'2px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s"></div>
+   </div>`;
+  const themeSwitch=`<div onclick="toggleLightMode()" style="width:44px;height:26px;border-radius:14px;background:${lightMode?'#4ade80':'#333'};position:relative;cursor:pointer;transition:.2s">
+     <div style="position:absolute;top:2px;left:${lightMode?'20px':'2px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s;display:flex;align-items:center;justify-content:center;font-size:12px">${lightMode?'☀️':'🌙'}</div>
    </div>`;
   el.innerHTML=`
   <div style="font-size:15px;font-weight:700;margin-bottom:14px">Configuración</div>
@@ -1654,7 +1762,7 @@ function renderSettings(el){
   )}
 
   ${stSection("Personalizar",
-    stRow("🌙","Tema",'<div style="color:#888;font-size:14px">Sistema</div><div style="color:#555;font-size:16px;margin-left:6px">›</div>')+stDivider()+
+    stRow(lightMode?"☀️":"🌙","Modo claro",themeSwitch)+stDivider()+
     stRow("▦","Efecto vidrio",glass)
   )}
 
@@ -1667,6 +1775,10 @@ function renderSettings(el){
     stRow("👛","Ingreso",null,"setView('dashboard')")+stDivider()+
     stRow("◐","Presupuestos",null,"setView('history')")+stDivider()+
     stRow("📋","Reglas",null,"setView('tools')")
+  )}
+
+  ${stSection("Ayuda",
+    stRow("📖","Ver tutorial",null,"startTutorial()")
   )}
 
   ${stSection("",
@@ -1767,15 +1879,11 @@ function setToolsSection(s){ toolsSection=s; render(); }
 
 function renderTools(el){
   let html=`
-  <div style="font-size:15px;font-weight:700;margin-bottom:14px">Herramientas</div>
-  <div style="display:flex;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:4px;margin-bottom:16px;gap:4px">
-    <button onclick="setToolsSection('categorias')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsSection==="categorias"?"linear-gradient(135deg,#6366f1,#a78bfa)":"none"};color:${toolsSection==="categorias"?"#fff":"#666"}">🏷️ Categorías</button>
-    <button onclick="setToolsSection('registros')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsSection==="registros"?"linear-gradient(135deg,#0ea5e9,#22c55e)":"none"};color:${toolsSection==="registros"?"#fff":"#666"}">🏦 Registros</button>
-  </div>`;
+  <div style="font-size:15px;font-weight:700;margin-bottom:14px">Herramientas</div>`;
   el.innerHTML=html;
   const sub=document.createElement("div");
   el.appendChild(sub);
-  if(toolsSection==="categorias") renderCategorias(sub); else renderRegistros(sub);
+  renderCategorias(sub);
 }
 
 function renderCategorias(el){
@@ -2413,7 +2521,8 @@ async function registerAccount(){
   sessionStorage.setItem("fin_unlocked","1");
   document.getElementById("lock-screen").classList.add("hidden");
   showToast("Cuenta creada. ¡Bienvenido a Zynto!");
-  initialSync();
+  await initialSync();
+  startTutorial();
 }
 
 // RECUPERAR / CREAR CONTRASEÑA POR CORREO
