@@ -14,7 +14,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html { height: 100%; overflow: hidden; }
-    body { font-family: 'DM Sans', sans-serif; background: #0a0a0f; color: #f0f0f5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    body { font-family: 'DM Sans', sans-serif; background: #000; color: #f5f5f5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     /* Modo claro: como casi todo el diseño usa colores fijos (no variables),
        se invierte toda la pantalla y se corrige de vuelta en imágenes/emoji
        para que no salgan con colores raros. Transición suave al cambiar. */
@@ -25,26 +25,26 @@
     button { cursor: pointer; }
     ::-webkit-scrollbar { display: none; }
 
-    #header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:rgba(10,10,15,.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid #1a1a2a; z-index:50; }
+    #header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:rgba(0,0,0,.97); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid #1c1c1c; z-index:50; }
     .logo { display:flex; align-items:center; gap:9px; }
-    .logo-icon { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#6ee7b7,#3b82f6); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#fff; }
+    .logo-icon { width:32px; height:32px; border-radius:9px; background:#111; border:1px solid #2a2a2a; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#fff; }
     .logo-text { font-weight:700; font-size:17px; letter-spacing:-.03em; }
-    #month-input { background:#16161e; border:1px solid #2a2a3a; color:#aaa; border-radius:8px; padding:6px 10px; font-size:12px; font-family:'DM Mono',monospace; }
+    #month-input { background:#0d0d0d; border:1px solid #262626; color:#999; border-radius:8px; padding:6px 10px; font-size:12px; font-family:'DM Mono',monospace; }
 
     #content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 16px 24px; }
 
-    #nav { flex-shrink:0; display:flex; background:rgba(14,14,20,.98); border-top:1px solid #1a1a2a; padding-bottom:calc(env(safe-area-inset-bottom) + 4px); }
+    #nav { flex-shrink:0; display:flex; background:rgba(0,0,0,.98); border-top:1px solid #1c1c1c; padding-bottom:calc(env(safe-area-inset-bottom) + 4px); }
     .nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 1px; background:none; color:#555; font-size:8px; letter-spacing:.01em; font-weight:600; transition:color .15s; line-height:1.1; text-align:center; }
-    .nav-btn.active { color:#a78bfa; }
+    .nav-btn.active { color:#f5f5f5; }
     .nav-btn svg { width:20px; height:20px; }
     .nav-add-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 2px; background:none; }
-    .nav-add-inner { width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,#a78bfa,#6366f1); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#fff; box-shadow:0 4px 18px rgba(99,102,241,.4); transition:transform .15s; }
+    .nav-add-inner { width:42px; height:42px; border-radius:13px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#000; transition:transform .15s; }
     .nav-add-btn:active .nav-add-inner { transform:scale(.92); }
 
-    #bg-particles { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+    #bg-particles { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:none; }
     #loading-screen, #lock-screen, #header, #content, nav#nav, #modal-overlay, #toast { position:relative; z-index:1; }
 
-    .card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .card:active { transform:scale(.985); }
     .debt-card, .receivable-card { transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease; }
     .debt-card:active, .receivable-card:active { transform:scale(.97); }
@@ -62,32 +62,31 @@
     @keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(.95); } to { opacity:1; transform:none; } }
-    .section-label { font-size:11px; color:#555; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:600; }
+    .section-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:600; }
 
-    #balance-card { border-radius:18px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both, auroraShift 9s ease-in-out infinite; background-size:180% 180%; transition:transform .15s ease; }
+    #balance-card { background:#0a0a0a !important; border:1px solid #1f1f1f; border-radius:18px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     #balance-card:active { transform:scale(.99); }
-    @keyframes auroraShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-    #balance-card .glow { position:absolute; top:-30px; right:-30px; width:140px; height:140px; border-radius:50%; pointer-events:none; }
+    #balance-card .glow { display:none; }
     #balance-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
-    #balance-amount { font-family:'DM Mono',monospace; font-size:34px; font-weight:700; letter-spacing:-.04em; margin-bottom:16px; }
+    #balance-amount { font-family:'DM Mono',monospace; font-size:34px; font-weight:700; letter-spacing:-.04em; margin-bottom:16px; color:#f5f5f5; }
     .balance-row { display:flex; gap:16px; }
     .balance-stat { flex:1; }
     .balance-stat-label { font-size:10px; letter-spacing:.07em; margin-bottom:3px; font-weight:600; }
     .balance-stat-val { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; }
 
-    .dist-bar-track { height:8px; border-radius:8px; background:#1e1e2e; overflow:hidden; display:flex; margin-bottom:8px; }
-    .dist-bar-in { background:linear-gradient(90deg,#34d399,#4ade80); transition:width .6s ease; }
-    .dist-bar-out { flex:1; background:linear-gradient(90deg,#f87171,#ef4444); }
+    .dist-bar-track { height:6px; border-radius:6px; background:#1a1a1a; overflow:hidden; display:flex; margin-bottom:8px; }
+    .dist-bar-in { background:#4ade80; transition:width .6s ease; }
+    .dist-bar-out { flex:1; background:#f87171; }
     .dist-labels { display:flex; justify-content:space-between; font-size:12px; }
 
     .cat-row { margin-bottom:12px; }
     .cat-row-top { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
-    .cat-bar-track { height:5px; border-radius:5px; background:#1e1e2e; }
-    .cat-bar-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,#6366f1,#a78bfa); transition:width .5s ease; }
+    .cat-bar-track { height:4px; border-radius:4px; background:#1a1a1a; }
+    .cat-bar-fill { height:100%; border-radius:4px; background:#f5f5f5; transition:width .5s ease; }
 
-    .tx-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #1a1a2a; }
+    .tx-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #171717; }
     .tx-row:last-child { border-bottom:none; }
-    .tx-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+    .tx-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; background:#111 !important; }
     .tx-info { flex:1; min-width:0; }
     .tx-desc { font-weight:500; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tx-sub { font-size:12px; color:#555; margin-top:2px; }
@@ -95,34 +94,34 @@
     .tx-del { background:none; color:#333; font-size:18px; padding:4px 4px 4px 8px; }
 
     .form-label { font-size:11px; color:#666; letter-spacing:.06em; text-transform:uppercase; display:block; margin-bottom:8px; font-weight:600; }
-    .form-input { width:100%; background:#0a0a0f; border:1px solid #2a2a3a; border-radius:12px; padding:13px 14px; color:#f0f0f5; font-size:16px; font-family:'DM Sans',sans-serif; }
-    .form-input:focus { border-color:#4c3d9a; }
-    .type-toggle { display:flex; background:#0a0a0f; border-radius:12px; padding:4px; border:1px solid #1e1e2e; margin-bottom:20px; }
+    .form-input { width:100%; background:#000; border:1px solid #262626; border-radius:12px; padding:13px 14px; color:#f5f5f5; font-size:16px; font-family:'DM Sans',sans-serif; }
+    .form-input:focus { border-color:#555; }
+    .type-toggle { display:flex; background:#000; border-radius:12px; padding:4px; border:1px solid #1f1f1f; margin-bottom:20px; }
     .type-btn { flex:1; padding:11px; border-radius:9px; font-weight:700; font-size:15px; transition:all .2s; background:transparent; color:#555; }
-    .type-btn.active-in { background:rgba(74,222,128,.15); color:#4ade80; border:1px solid #1a5c35; }
-    .type-btn.active-out { background:rgba(248,113,113,.15); color:#f87171; border:1px solid #5c1a1a; }
+    .type-btn.active-in { background:rgba(74,222,128,.12); color:#4ade80; border:1px solid #1d3a26; }
+    .type-btn.active-out { background:rgba(248,113,113,.12); color:#f87171; border:1px solid #3a1d1d; }
     .cats-wrap { display:flex; flex-wrap:wrap; gap:8px; }
-    .cat-btn { padding:8px 13px; border-radius:9px; font-size:13px; font-weight:500; background:#0a0a0f; color:#555; border:1px solid #1a1a2a; transition:all .15s; }
-    .cat-btn.selected { background:#1e1e3a; color:#a78bfa; border-color:#4c3d9a; }
-    .submit-btn { width:100%; padding:16px; border-radius:14px; font-weight:700; font-size:17px; color:#fff; letter-spacing:-.01em; box-shadow:0 8px 24px rgba(0,0,0,.4); transition:transform .1s; }
+    .cat-btn { padding:8px 13px; border-radius:9px; font-size:13px; font-weight:500; background:#000; color:#666; border:1px solid #1f1f1f; transition:all .15s; }
+    .cat-btn.selected { background:#1a1a1a; color:#f5f5f5; border-color:#444; }
+    .submit-btn { width:100%; padding:16px; border-radius:14px; font-weight:700; font-size:17px; color:#000; letter-spacing:-.01em; background:#f5f5f5 !important; box-shadow:none; transition:transform .1s; }
     .submit-btn:active { transform:scale(.97); }
 
-    .hist-card { background:#16161e; border:1px solid #2a2a3a; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .hist-card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .hist-card:active { transform:scale(.98); }
 
     /* SAVINGS */
-    .goal-card { background:#16161e; border:1px solid #2a2a3a; border-radius:16px; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .goal-card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:16px; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .goal-card:active { transform:scale(.98); }
     .goal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .goal-name { font-weight:700; font-size:15px; }
-    .goal-progress-track { height:8px; border-radius:8px; background:#1e1e2e; margin-bottom:8px; overflow:hidden; }
-    .goal-progress-fill { height:100%; border-radius:8px; transition:width .6s cubic-bezier(.22,1,.36,1); }
+    .goal-progress-track { height:6px; border-radius:6px; background:#1a1a1a; margin-bottom:8px; overflow:hidden; }
+    .goal-progress-fill { height:100%; border-radius:6px; background:#f5f5f5 !important; transition:width .6s cubic-bezier(.22,1,.36,1); }
     .goal-amounts { display:flex; justify-content:space-between; font-size:12px; color:#666; margin-bottom:10px; }
     .goal-amount-val { font-family:'DM Mono',monospace; font-size:13px; }
     .goal-actions { display:flex; gap:8px; }
-    .goal-btn { flex:1; padding:8px; border-radius:9px; font-size:13px; font-weight:600; background:#1e1e2e; color:#a78bfa; border:1px solid #2a2a3a; transition:all .15s; }
+    .goal-btn { flex:1; padding:8px; border-radius:9px; font-size:13px; font-weight:600; background:#141414; color:#ddd; border:1px solid #262626; transition:all .15s; }
     .goal-btn:active { transform:scale(.96); }
-    .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#1e1e2e; color:#555; border:1px solid #2a2a3a; }
+    .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#141414; color:#555; border:1px solid #262626; }
 
     /* DEBTS */
     .debt-card { border-radius:16px; padding:16px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; transition:transform .15s ease; }
@@ -202,7 +201,7 @@
     .modal-cancel { flex:1; padding:11px; border-radius:10px; background:#222; color:#888; font-size:15px; }
     .modal-confirm { flex:1; padding:11px; border-radius:10px; font-size:15px; font-weight:700; color:#fff; }
     .modal-confirm.danger { background:#7f2020; }
-    .modal-confirm.primary { background:linear-gradient(135deg,#6366f1,#a78bfa); }
+    .modal-confirm.primary { background:#f5f5f5; color:#000; }
 
     #toast { display:none; position:fixed; bottom:calc(80px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:10px; font-size:14px; font-weight:500; box-shadow:0 8px 28px rgba(0,0,0,.5); z-index:300; white-space:nowrap; animation:toastIn .3s ease; }
     #toast.show { display:block; }
@@ -228,14 +227,14 @@
     .ticker-sep { color:#333; padding:0 8px; font-size:14px; }
     #ticker-bell { flex-shrink:0; padding:0 10px; font-size:14px; cursor:pointer; border-left:1px solid #2a1a4a; height:100%; display:flex; align-items:center; background:none; transition:background .15s; }
     #ticker-bell:hover { background:rgba(255,255,255,.05); }
-    #ticker-bell.on { color:#a78bfa; }
+    #ticker-bell.on { color:#f5f5f5; }
     #ticker-bell.off { color:#444; }
   
     #lock-screen { position:fixed; inset:0; background:#0a0a0f; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px; }
     #lock-screen.hidden { display:none; }
     #lock-icon { width:60px; height:60px; border-radius:18px; background:linear-gradient(135deg,#6ee7b7,#3b82f6); display:flex; align-items:center; justify-content:center; font-size:30px; }
     #lock-input { background:#16161e; border:1px solid #2a2a3a; border-radius:12px; padding:14px 18px; color:#fff; font-size:18px; text-align:center; width:240px; letter-spacing:4px; }
-    #lock-btn, .lock-action-btn { background:linear-gradient(135deg,#6366f1,#a78bfa); color:#fff; border:none; border-radius:12px; padding:13px 30px; font-size:15px; font-weight:700; }
+    #lock-btn, .lock-action-btn { background:#f5f5f5; color:#000; border:none; border-radius:12px; padding:13px 30px; font-size:15px; font-weight:700; }
     #lock-error { color:#f87171; font-size:13px; height:16px; }
     .lock-field { background:#16161e; border:1px solid #2a2a3a; border-radius:12px; padding:14px 18px; color:#fff; font-size:16px; text-align:center; width:240px; }
     .lock-view { display:none; flex-direction:column; align-items:center; gap:14px; }
@@ -358,10 +357,10 @@
     <input id="lock-input" class="lock-field" type="password" placeholder="Contraseña" autocomplete="current-password" />
     <div id="lock-error"></div>
     <button id="lock-btn" onclick="checkPassword()">Entrar</button>
-    <button id="faceid-btn" onclick="unlockWithFaceID()" class="lock-action-btn" style="display:none;background:#16161e;border:1px solid #2a2a3a;color:#a78bfa">🆔 Usar Face ID</button>
+    <button id="faceid-btn" onclick="unlockWithFaceID()" class="lock-action-btn" style="display:none;background:#0a0a0a;border:1px solid #262626;color:#f5f5f5">🆔 Usar Face ID</button>
     <div id="faceid-setup" onclick="setupFaceID()" class="lock-link" style="display:none">Activar Face ID</div>
     <div onclick="showForgotRequest()" class="lock-link" style="margin-top:4px">¿Olvidaste tu contraseña?</div>
-    <div onclick="showRegister()" class="lock-link">¿No tienes cuenta? <b style="color:#a78bfa">Crear cuenta</b></div>
+    <div onclick="showRegister()" class="lock-link">¿No tienes cuenta? <b style="color:#f5f5f5">Crear cuenta</b></div>
   </div>
 
   <div id="lock-view-register" class="lock-view">
@@ -372,7 +371,7 @@
     <input id="reg-pass" class="lock-field" type="password" placeholder="Contraseña" autocomplete="new-password" />
     <input id="reg-pass2" class="lock-field" type="password" placeholder="Confirmar contraseña" autocomplete="new-password" />
     <div id="reg-error" style="color:#f87171;font-size:13px"></div>
-    <button class="lock-action-btn" onclick="registerAccount()" style="background:#a78bfa;color:#0a0a0f;font-weight:800">Crear cuenta</button>
+    <button class="lock-action-btn" onclick="registerAccount()" style="background:#f5f5f5;color:#000;font-weight:800">Crear cuenta</button>
     <div onclick="backToLogin()" class="lock-link">Volver a iniciar sesión</div>
   </div>
 
@@ -401,8 +400,9 @@
     <span class="logo-text">Zynto</span>
   </div>
   <input type="month" id="month-input" />
-  <button id="sync-btn" onclick="manualSync()" title="Sincronizar con Google Sheets" style="background:#16161e;border:1px solid #2a2a3a;color:#a78bfa;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🔄</button>
-  <button id="settings-btn" onclick="setView('settings')" title="Configuración" style="background:#16161e;border:1px solid #2a2a3a;color:#a78bfa;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">⚙️</button>
+  <button id="sync-btn" onclick="manualSync()" title="Sincronizar con Google Sheets" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🔄</button>
+  <button id="tutorial-btn" onclick="startTutorial()" title="Ver tutorial" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🎓</button>
+  <button id="settings-btn" onclick="setView('settings')" title="Configuración" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">⚙️</button>
 </div>
 
 <!-- TICKER -->
@@ -737,7 +737,7 @@ function buildCuotasCard(c){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;height:5px;background:#1a1a24;border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a78bfa,#6366f1);border-radius:3px"></div>
+          <div style="height:100%;width:${pct}%;background:#f5f5f5;border-radius:3px"></div>
         </div>
         <div style="font-size:10.5px;color:#999;white-space:nowrap">${x.actual} de ${x.total}${restantes>0?` · faltan ${restantes}`:" · última cuota"}</div>
       </div>
@@ -1527,11 +1527,11 @@ function renderSavings(el){
 
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
     <div style="font-size:15px;font-weight:700">Metas de ahorro</div>
-    <button onclick="openNewGoalModal()" style="background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva meta</button>
+    <button onclick="openNewGoalModal()" style="background:#f5f5f5;color:#000;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva meta</button>
   </div>`;
 
   if(goals.length===0){
-    html+=`<div class="card"><div class="empty"><div class="empty-icon">🏦</div>Sin metas aún.<br><button onclick="openNewGoalModal()" style="margin-top:14px;background:#1e1e3a;border:1px solid #2a2a4a;color:#a78bfa;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Crear primera meta</button></div></div>`;
+    html+=`<div class="card"><div class="empty"><div class="empty-icon">🏦</div>Sin metas aún.<br><button onclick="openNewGoalModal()" style="margin-top:14px;background:#141414;border:1px solid #2a2a2a;color:#f5f5f5;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Crear primera meta</button></div></div>`;
   } else {
     goals.forEach((g,i)=>{
       const saved=g.saved||0;
@@ -1659,7 +1659,7 @@ function openNewGoalModal(){
     <div class="modal-row"><label class="form-label">Nombre</label><input id="mg-name" class="form-input" placeholder="Ej: Viaje a Europa" /></div>
     <div class="modal-row"><label class="form-label">Monto objetivo ($)</label><input id="mg-target" class="form-input" type="number" min="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:18px" /></div>`,
     "Crear meta","primary","addGoal",{});
-  setTimeout(()=>{ const f=document.querySelector('.emoji-opt'); if(f){ f.classList.add('selected'); f.style.background='#1e1e3a'; f.style.borderColor='#4c3d9a'; f.style.color='#a78bfa'; } },50);
+  setTimeout(()=>{ const f=document.querySelector('.emoji-opt'); if(f){ f.classList.add('selected'); f.style.background='#1a1a1a'; f.style.borderColor='#555'; f.style.color='#f5f5f5'; } },50);
 }
 function openDepositModal(id,isWithdraw){
   const g=goals.find(g=>g.id===id);
@@ -1678,7 +1678,7 @@ function askDeleteTx(id){
 // ── CONFIGURACIÓN ────────────────────────────────────────
 function stRow(icon,label,right,onclick){
   return `<div onclick="${onclick||''}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;${onclick?'cursor:pointer':''}">
-    <div style="width:26px;text-align:center;font-size:18px;color:#a78bfa">${icon}</div>
+    <div style="width:26px;text-align:center;font-size:18px;color:#eee">${icon}</div>
     <div style="flex:1;font-size:15px;font-weight:600;color:#f0f0f5">${label}</div>
     ${right||'<div style="color:#555;font-size:16px">›</div>'}
   </div>`;
@@ -1716,7 +1716,7 @@ function renderTutorial(el){
   const step=Math.max(0,Math.min(tutorialStep,TUTORIAL_STEPS.length-1));
   const s=TUTORIAL_STEPS[step];
   const isFirst=step===0, isLast=step===TUTORIAL_STEPS.length-1;
-  const dots=TUTORIAL_STEPS.map((_,i)=>`<div style="width:${i===step?18:6}px;height:6px;border-radius:3px;background:${i===step?"#a78bfa":"#333"};transition:.2s"></div>`).join("");
+  const dots=TUTORIAL_STEPS.map((_,i)=>`<div style="width:${i===step?18:6}px;height:6px;border-radius:3px;background:${i===step?"#f5f5f5":"#333"};transition:.2s"></div>`).join("");
   el.innerHTML=`
   <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
     <div onclick="closeTutorial()" style="font-size:12.5px;color:#666;cursor:pointer;padding:6px">Saltar</div>
@@ -1729,7 +1729,7 @@ function renderTutorial(el){
   <div style="display:flex;justify-content:center;gap:5px;margin-bottom:18px">${dots}</div>
   <div style="display:flex;gap:10px">
     ${!isFirst?`<button onclick="tutorialStep--;render()" style="flex:1;background:#16161e;border:1px solid #2a2a3a;color:#ccc;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Atrás</button>`:""}
-    <button onclick="${isLast?"closeTutorial()":"tutorialStep++;render()"}" style="flex:2;background:#a78bfa;border:none;color:#0a0a0f;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer">${isLast?"Empezar a usar Zynto":"Siguiente"}</button>
+    <button onclick="${isLast?"closeTutorial()":"tutorialStep++;render()"}" style="flex:2;background:#f5f5f5;border:none;color:#000;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer">${isLast?"Empezar a usar Zynto":"Siguiente"}</button>
   </div>`;
 }
 function startTutorial(){ tutorialStep=0; save("fin_tutorial_seen",true); setView("tutorial"); }
@@ -1796,7 +1796,7 @@ function renderAccountScreen(el){
   const acc=getAccount()||{name:"",username:"",email:""};
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#a78bfa">‹</div>
+    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
     <div style="font-size:15px;font-weight:700">Cuenta</div>
   </div>
   <div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -1813,7 +1813,7 @@ function renderAccountScreen(el){
       <input id="acc-email" type="email" value="${esc(acc.email)}" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
     </div>
     <div id="acc-error" style="color:#f87171;font-size:13px"></div>
-    <button onclick="saveAccountEdits()" style="background:#a78bfa;color:#0a0a0f;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Guardar cambios</button>
+    <button onclick="saveAccountEdits()" style="background:#f5f5f5;color:#000;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Guardar cambios</button>
   </div>`;
 }
 function saveAccountEdits(){
@@ -1829,7 +1829,7 @@ function saveAccountEdits(){
 function renderSecurityScreen(el){
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#a78bfa">‹</div>
+    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
     <div style="font-size:15px;font-weight:700">Seguridad</div>
   </div>
   <div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -1846,7 +1846,7 @@ function renderSecurityScreen(el){
       <input id="sec-new2" type="password" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
     </div>
     <div id="sec-error" style="color:#f87171;font-size:13px"></div>
-    <button onclick="changePassword()" style="background:#a78bfa;color:#0a0a0f;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
+    <button onclick="changePassword()" style="background:#f5f5f5;color:#000;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
   </div>`;
 }
 async function changePassword(){
@@ -1895,7 +1895,7 @@ function renderCategorias(el){
       <button onclick="setToolsTab('gasto')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsTab==="gasto"?"linear-gradient(135deg,#f87171,#dc2626)":"none"};color:${toolsTab==="gasto"?"#fff":"#666"}">↓ Gasto</button>
       <button onclick="setToolsTab('ingreso')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsTab==="ingreso"?"linear-gradient(135deg,#34d399,#059669)":"none"};color:${toolsTab==="ingreso"?"#fff":"#666"}">↑ Ingreso</button>
     </div>
-    <button onclick="openAddCategoryModal()" style="width:100%;background:#16161e;border:1px dashed #3a3a4a;color:#a78bfa;border-radius:12px;padding:12px;font-size:14px;font-weight:600">+ Nueva categoría de ${toolsTab==="gasto"?"gasto":"ingreso"}</button>
+    <button onclick="openAddCategoryModal()" style="width:100%;background:#0a0a0a;border:1px dashed #333;color:#eee;border-radius:12px;padding:12px;font-size:14px;font-weight:600">+ Nueva categoría de ${toolsTab==="gasto"?"gasto":"ingreso"}</button>
   </div>`;
 
   html+=`<div class="section-label" style="margin-bottom:8px">CATEGORÍAS BASE</div>
