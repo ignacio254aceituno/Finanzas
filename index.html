@@ -44,7 +44,7 @@
     #bg-particles { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:none; }
     #loading-screen, #lock-screen, #header, #content, nav#nav, #modal-overlay, #toast { position:relative; z-index:1; }
 
-    .card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:16px; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .card:active { transform:scale(.985); }
     .debt-card, .receivable-card { transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease; }
     .debt-card:active, .receivable-card:active { transform:scale(.97); }
@@ -64,7 +64,7 @@
     @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(.95); } to { opacity:1; transform:none; } }
     .section-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:600; }
 
-    #balance-card { background:#0a0a0a !important; border:1px solid #1f1f1f; border-radius:18px; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    #balance-card { background:#0a0a0a !important; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     #balance-card:active { transform:scale(.99); }
     #balance-card .glow { display:none; }
     #balance-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
@@ -94,23 +94,23 @@
     .tx-del { background:none; color:#333; font-size:18px; padding:4px 4px 4px 8px; }
 
     .form-label { font-size:11px; color:#666; letter-spacing:.06em; text-transform:uppercase; display:block; margin-bottom:8px; font-weight:600; }
-    .form-input { width:100%; background:#000; border:1px solid #262626; border-radius:12px; padding:13px 14px; color:#f5f5f5; font-size:16px; font-family:'DM Sans',sans-serif; }
+    .form-input { width:100%; background:#000; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:13px 14px; color:#f5f5f5; font-size:16px; font-family:'DM Sans',sans-serif; }
     .form-input:focus { border-color:#555; }
-    .type-toggle { display:flex; background:#000; border-radius:12px; padding:4px; border:1px solid #1f1f1f; margin-bottom:20px; }
+    .type-toggle { display:flex; background:#000; border-radius:0; padding:4px; border:1px solid rgba(255,255,255,.22); margin-bottom:20px; }
     .type-btn { flex:1; padding:11px; border-radius:9px; font-weight:700; font-size:15px; transition:all .2s; background:transparent; color:#555; }
     .type-btn.active-in { background:rgba(74,222,128,.12); color:#4ade80; border:1px solid #1d3a26; }
     .type-btn.active-out { background:rgba(248,113,113,.12); color:#f87171; border:1px solid #3a1d1d; }
     .cats-wrap { display:flex; flex-wrap:wrap; gap:8px; }
-    .cat-btn { padding:8px 13px; border-radius:9px; font-size:13px; font-weight:500; background:#000; color:#666; border:1px solid #1f1f1f; transition:all .15s; }
+    .cat-btn { padding:8px 13px; border-radius:0; font-size:13px; font-weight:500; background:#000; color:#666; border:1px solid rgba(255,255,255,.22); transition:all .15s; }
     .cat-btn.selected { background:#1a1a1a; color:#f5f5f5; border-color:#444; }
-    .submit-btn { width:100%; padding:16px; border-radius:14px; font-weight:700; font-size:17px; color:#000; letter-spacing:-.01em; background:#f5f5f5 !important; box-shadow:none; transition:transform .1s; }
+    .submit-btn { width:100%; padding:16px; border-radius:0; font-weight:700; font-size:17px; color:#000; letter-spacing:-.01em; background:#f5f5f5 !important; box-shadow:none; transition:transform .1s; }
     .submit-btn:active { transform:scale(.97); }
 
-    .hist-card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .hist-card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .hist-card:active { transform:scale(.98); }
 
     /* SAVINGS */
-    .goal-card { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:16px; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .goal-card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .goal-card:active { transform:scale(.98); }
     .goal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .goal-name { font-weight:700; font-size:15px; }
@@ -124,7 +124,7 @@
     .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#141414; color:#555; border:1px solid #262626; }
 
     /* DEBTS */
-    .debt-card { border-radius:16px; padding:16px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; transition:transform .15s ease; }
+    .debt-card { border-radius:0; padding:16px; margin-bottom:12px; border:1px solid rgba(255,255,255,.22); animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; transition:transform .15s ease; }
     .debt-card:active { transform:scale(.98); }
     .animated-list-scroll { max-height:420px; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#333 transparent; mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); -webkit-mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); padding-top:4px; }
     .animated-list-scroll::-webkit-scrollbar { width:5px; }
@@ -1214,7 +1214,7 @@ function renderMyDebts(el){
         const pct=Math.round((d.paid/d.total)*100);
         const overdue=d.vencimiento&&d.vencimiento<todayStr();
         const duesSoon=d.vencimiento&&!overdue&&d.vencimiento<=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
-        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"linear-gradient(135deg,#1a0808,#140a0a)":"#16161e"};border:1px solid ${overdue?"#4a1a1a":duesSoon?"#4a3010":"#2a2a3a"};cursor:pointer" onclick="toggleDebtCard(this)">
+        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0a0a0a"};border:1px solid ${overdue?"#5a2020":duesSoon?"#5a3a10":"rgba(255,255,255,.22)"};cursor:pointer" onclick="toggleDebtCard(this)">
           <div class="debt-checkbox" style="width:26px;height:26px;border-radius:50%;border:2px solid #333;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center;margin-right:4px;transition:all .2s;font-size:14px"></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -1248,7 +1248,7 @@ function renderMyDebts(el){
     if(paid.length>0){
       html+=`<div class="section-label" style="margin-top:16px;margin-bottom:8px">PAGADAS ✓</div>`;
       paid.forEach((d,i)=>{
-        html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0d160d;border:1px solid #1a3020;opacity:.7">
+        html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0a0d0a;border:1px solid rgba(255,255,255,.14);opacity:.7">
           <div style="flex:1;min-width:0">
             <div class="debt-name" style="color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
             <div style="font-size:12px;color:#3a6a3a;margin-top:3px">${d.categoria||"General"}</div>
@@ -1325,7 +1325,7 @@ function renderReceivables(el){
         const remain=r.total-r.paid;
         const pct=Math.round((r.paid/r.total)*100);
         const overdue=r.vencimiento&&r.vencimiento<todayStr();
-        html+=`<div class="debt-card" style="animation-delay:${i*.05}s;background:${overdue?"linear-gradient(135deg,#1a0808,#140a0a)":"#16161e"};border:1px solid ${overdue?"#4a1a1a":"#2a2a3a"}">
+        html+=`<div class="debt-card" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0a0a0a"};border:1px solid ${overdue?"#5a2020":"rgba(255,255,255,.22)"}">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <div class="debt-name">${esc(r.name)}</div>
@@ -1355,7 +1355,7 @@ function renderReceivables(el){
     if(paid.length>0){
       html+=`<div class="section-label" style="margin-top:16px;margin-bottom:8px">COBRADAS ✓</div>`;
       paid.forEach((r,i)=>{
-        html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0d160d;border:1px solid #1a3020;opacity:.7">
+        html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0a0d0a;border:1px solid rgba(255,255,255,.14);opacity:.7">
           <div style="flex:1;min-width:0">
             <div class="debt-name" style="color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(r.name)}</div>
             <div style="font-size:12px;color:#3a6a3a;margin-top:3px">${r.nota||"General"}</div>
