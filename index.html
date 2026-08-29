@@ -2404,6 +2404,8 @@ async function manualSync(){
       showToast("Sin conexión — tus datos siguen a salvo en el teléfono","err");
     }
   }
+  // También trae tus cuentas/tarjetas bancarias conectadas vía Fintoc
+  try{ await fetchBankRecords(true); }catch(e){}
   setTimeout(()=>{ btn.style.transform="rotate(0deg)"; },600);
 }
 
