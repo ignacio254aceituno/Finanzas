@@ -484,6 +484,7 @@ function load(k,def){ try{ return JSON.parse(localStorage.getItem(k)||"null")??d
 function save(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
 let tutorialStep=0;
+let creditos = load("fin_creditos",[]);
 let transactions = load("fin_tx",[]);
 let goals        = load("fin_goals",[]);
 // debt: {id, name, total, paid, vencimiento, categoria, pagos:[{date,amount}]}
@@ -551,7 +552,17 @@ function openModal(title,bodyHtml,confirmLabel,confirmClass,action,data){
 function closeModal(){ modalAction=null; modalData={}; document.getElementById("modal-overlay").classList.remove("show"); }
 
 function modalConfirm(){
-  if(modalAction==="deleteGoal"){
+  if(modalAction==="addCredito"){
+    const banco=document.getElementById("cr-banco")?.value||"Otro";
+    const monto=parseFloat(document.getElementById("cr-monto")?.value);
+    const tasa=parseFloat(document.getElementById("cr-tasa")?.value)||0;
+    const cae=parseFloat(document.getElementById("cr-cae")?.value)||0;
+    const cuotasTotal=parseInt(document.getElementById("cr-cuotas")?.value,10);
+    if(!monto||monto<=0){ showToast("Ingresa un monto válido","err"); return; }
+    if(!cuotasTotal||cuotasTotal<=0){ showToast("Ingresa la cantidad de cuotas","err"); return; }
+    creditos.push({id:Date.now(),banco,monto,tasa,cae,cuotasTotal,cuotasPagadas:0,creado:new Date().toISOString()});
+    saveCreditos(); showToast("Crédito agregado ✓"); closeModal(); render();
+  } else if(modalAction==="deleteGoal"){
     goals=goals.filter(g=>g.id!==modalData.id); save("fin_goals",goals); syncToCloud();
     showToast("Meta eliminada","err"); closeModal(); render();
   } else if(modalAction==="deleteTx"){
@@ -699,6 +710,7 @@ function render(){
   else if(currentView==="tools") renderTools(el);
   else if(currentView==="ingresos") renderIngresosGastos(el,filtered);
   else if(currentView==="tutorial") renderTutorial(el);
+  else if(currentView==="creditos") renderCreditos(el);
   else if(currentView==="settings") renderSettings(el);
   else if(currentView==="account") renderAccountScreen(el);
   else if(currentView==="security") renderSecurityScreen(el);
@@ -1887,7 +1899,15 @@ function setToolsSection(s){ toolsSection=s; render(); }
 
 function renderTools(el){
   let html=`
-  <div style="font-size:15px;font-weight:700;margin-bottom:14px">Herramientas</div>`;
+  <div style="font-size:15px;font-weight:700;margin-bottom:14px">Herramientas</div>
+  <div class="card" onclick="setView('creditos')" style="cursor:pointer;display:flex;align-items:center;gap:14px">
+    <div style="width:42px;height:42px;border-radius:12px;background:#141414;border:1px solid #262626;display:flex;align-items:center;justify-content:center;font-size:20px">🏦</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:14.5px">Créditos bancarios</div>
+      <div style="font-size:12px;color:#666;margin-top:2px">Tasa, cuotas, proyección y seguimiento de pagos</div>
+    </div>
+    <div style="color:#555;font-size:18px">›</div>
+  </div>`;
   el.innerHTML=html;
   const sub=document.createElement("div");
   el.appendChild(sub);
@@ -2002,6 +2022,116 @@ function deleteBankCard(cuentaKey){
   showToast("Tarjeta eliminada de la app");
   render();
 }
+// ── CRÉDITOS BANCARIOS (préstamos con tasa, cuotas y proyección) ──────────
+const BANCOS_CREDITO = [
+  "Banco de Chile","Scotiabank","Santander","BCI","BancoEstado","Itaú","BICE",
+  "Security","Consorcio","Coopeuch","Falabella / CMR","Ripley","HSBC","Otro"
+];
+function calcularCuotaFrancesa(monto,tasaMensualPct,n){
+  const i=(tasaMensualPct||0)/100;
+  if(!monto||!n) return 0;
+  if(i<=0) return monto/n; // sin interés (o no informado): cuota simple
+  return monto*i/(1-Math.pow(1+i,-n));
+}
+function saveCreditos(){ save("fin_creditos",creditos); syncToCloud(); }
+
+function renderCreditos(el){
+  const rows=creditos.map((cr,idx)=>{
+    const style=bankStyle(cr.banco);
+    const cuota=calcularCuotaFrancesa(cr.monto,cr.tasa,cr.cuotasTotal);
+    const totalAPagar=cuota*cr.cuotasTotal;
+    const totalInteres=totalAPagar-cr.monto;
+    const pagadas=cr.cuotasPagadas||0;
+    const restantes=cr.cuotasTotal-pagadas;
+    const restantePorPagar=cuota*restantes;
+    const pct=cr.cuotasTotal?Math.round((pagadas/cr.cuotasTotal)*100):0;
+    return `<div class="card" style="border-left:4px solid transparent;background:${style.bg};background-size:100% 100%;position:relative;overflow:hidden;padding:0;margin-bottom:14px">
+      <div style="background:rgba(0,0,0,.72);backdrop-filter:blur(2px);padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#fff">${esc(cr.banco)}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:2px">Tasa ${cr.tasa}% mensual${cr.cae?` · CAE ${cr.cae}%`:""}</div>
+          </div>
+          <button onclick="deleteCredito(${idx})" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer">🗑️</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.04em">MONTO SOLICITADO</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.04em">${pagadas} de ${cr.cuotasTotal} cuotas</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:800;color:#fff">${fmt(cr.monto)}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.75)">${pct}%</div>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.2);border-radius:6px;overflow:hidden;margin-bottom:14px">
+          <div style="height:100%;width:${pct}%;background:#fff;border-radius:6px;transition:width .4s"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:10px">
+            <div style="font-size:9.5px;color:rgba(255,255,255,.6)">CUOTA MENSUAL</div>
+            <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:800;color:#fff">${fmt(cuota)}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:10px">
+            <div style="font-size:9.5px;color:rgba(255,255,255,.6)">RESTA POR PAGAR</div>
+            <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:800;color:#fff">${fmt(restantePorPagar)}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:10px">
+            <div style="font-size:9.5px;color:rgba(255,255,255,.6)">TOTAL A PAGAR</div>
+            <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#fff">${fmt(totalAPagar)}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:10px">
+            <div style="font-size:9.5px;color:rgba(255,255,255,.6)">INTERÉS TOTAL</div>
+            <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#fecaca">${fmt(totalInteres)}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button onclick="marcarCuotaCredito(${idx},-1)" ${pagadas<=0?"disabled":""} style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;opacity:${pagadas<=0?".4":"1"}">− Cuota atrás</button>
+          <button onclick="marcarCuotaCredito(${idx},1)" ${pagadas>=cr.cuotasTotal?"disabled":""} style="flex:1;background:#fff;color:#000;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;opacity:${pagadas>=cr.cuotasTotal?".4":"1"}">✓ Marcar cuota pagada</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div onclick="setView('tools')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
+      <div style="font-size:15px;font-weight:700;flex:1">Créditos bancarios</div>
+      <button onclick="openAddCreditoModal()" style="background:#f5f5f5;color:#000;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer">+ Nuevo</button>
+    </div>
+    ${creditos.length?rows:`<div class="card" style="text-align:center;color:#666;padding:30px 20px">
+      <div style="font-size:32px;margin-bottom:10px">🏦</div>
+      No tienes créditos bancarios registrados.<br>Agrega uno para calcular tu cuota mensual y hacer seguimiento de tus pagos.
+    </div>`}
+  `;
+}
+
+function openAddCreditoModal(){
+  const bancosOpts=BANCOS_CREDITO.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("");
+  openModal("Nuevo crédito bancario",
+    `<div class="modal-row"><label class="form-label">Banco</label><select id="cr-banco" class="form-input">${bancosOpts}</select></div>
+     <div class="modal-row"><label class="form-label">Monto total del crédito</label><input id="cr-monto" type="number" inputmode="numeric" placeholder="Ej: 3000000" class="form-input" style="font-family:'DM Mono',monospace;font-size:18px" /></div>
+     <div class="modal-row" style="display:flex;gap:10px">
+       <div style="flex:1"><label class="form-label">Tasa mensual (%)</label><input id="cr-tasa" type="number" step="0.01" inputmode="decimal" placeholder="Ej: 1.8" class="form-input" /></div>
+       <div style="flex:1"><label class="form-label">CAE anual (%) — opcional</label><input id="cr-cae" type="number" step="0.01" inputmode="decimal" placeholder="Ej: 24.5" class="form-input" /></div>
+     </div>
+     <div class="modal-row"><label class="form-label">Cantidad de cuotas</label><input id="cr-cuotas" type="number" inputmode="numeric" placeholder="Ej: 12" class="form-input" /></div>
+     <div style="font-size:11px;color:#666;margin-top:4px">La cuota mensual se calcula sola con estos datos (sistema de amortización francés, el mismo que usan los bancos). El CAE es solo referencial — algunos bancos suman seguros/comisiones extra que no se incluyen aquí.</div>`,
+    "Agregar crédito","primary","addCredito",{});
+}
+function deleteCredito(idx){
+  creditos.splice(idx,1);
+  saveCreditos();
+  render();
+}
+function marcarCuotaCredito(idx,delta){
+  const cr=creditos[idx]; if(!cr) return;
+  cr.cuotasPagadas=Math.max(0,Math.min(cr.cuotasTotal,(cr.cuotasPagadas||0)+delta));
+  saveCreditos();
+  render();
+}
+
 function bankStyle(name){
   const n=(name||"").toLowerCase();
   if(n.includes("chile")) return{bg:"linear-gradient(135deg,#1e5fbf,#0f3d8a)",icon:"🏦",mono:"BCh",domain:"bancochile.cl"};
@@ -2421,6 +2551,7 @@ async function syncToCloud(){
     customCats.gasto.forEach(c=>catsRows.push(["gasto",c.name,c.icon]));
     customCats.ingreso.forEach(c=>catsRows.push(["ingreso",c.name,c.icon]));
     await postToScript({sheet:nsSheet_("Categorias"),action:"save",data:catsRows});
+    await postToScript({sheet:nsSheet_("Creditos"),action:"save",data:[["id","banco","monto","tasa","cae","cuotasTotal","cuotasPagadas","creado"],...creditos.map(c=>[c.id,c.banco,c.monto,c.tasa,c.cae,c.cuotasTotal,c.cuotasPagadas,c.creado||""])]});
     return true;
   }catch(e){ console.log("Sync error",e); return false; }
 }
@@ -2446,7 +2577,9 @@ async function loadFromCloud(){
     }
     const d7=await getSheet(nsSheet_("Registros"));
     if(d7.length>1) bankRecords=d7.slice(1).map(row=>({id:row[0],cuenta:row[1],descripcion:row[2],monto:Number(row[3]),fecha:row[4],tipo:row[5],categoria:row[6]}));
-    save("fin_tx",transactions); save("fin_debts",debts); save("fin_goals",goals); save("fin_monthly_debts",monthlyDebts); save("fin_receivables",receivables); save("fin_custom_cats",customCats); save("fin_bank_records",bankRecords);
+    const d8=await getSheet(nsSheet_("Creditos"));
+    if(d8.length>1) creditos=d8.slice(1).map(r=>({id:r[0],banco:r[1],monto:Number(r[2]),tasa:Number(r[3]),cae:Number(r[4]),cuotasTotal:Number(r[5]),cuotasPagadas:Number(r[6]),creado:r[7]}));
+    save("fin_tx",transactions); save("fin_debts",debts); save("fin_goals",goals); save("fin_monthly_debts",monthlyDebts); save("fin_receivables",receivables); save("fin_custom_cats",customCats); save("fin_bank_records",bankRecords); save("fin_creditos",creditos);
     render(); renderTicker();
   }catch(e){console.log("Load error",e);}
 }
@@ -2682,6 +2815,16 @@ document.addEventListener("visibilitychange",()=>{
 window.addEventListener("storage",(e)=>{
   if(e.key==="fin_bank_sync_signal") maybeAutoSyncBanks();
 });
+
+// Auto-sincronización periódica cada 5 minutos: tarjetas/cuentas bancarias
+// (Fintoc) + transacciones/deudas/metas — solo mientras la app está abierta,
+// desbloqueada y visible (no gasta batería/datos en segundo plano).
+setInterval(async ()=>{
+  if(sessionStorage.getItem("fin_unlocked")!=="1") return;
+  if(document.visibilityState!=="visible") return;
+  try{ await fetchBankRecords(true); }catch(e){}
+  try{ const ok=await syncToCloud(); if(ok) await loadFromCloud(); }catch(e){}
+}, 5*60*1000);
 // ── MONTHLY DEBTS VIEW ────────────────────────────────────
 const MONTHLY_CATS = ["Gastos comunes","Tarjeta de crédito","Supermercado","Servicios","Arriendo","Internet/Telefonía","Seguro","Educación","Salud","Otro"];
 
