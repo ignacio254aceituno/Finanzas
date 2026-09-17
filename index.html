@@ -52,6 +52,14 @@
 
     .card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .card:active { transform:scale(.985); }
+
+    /* Carrusel deslizable de Inicio: gráfico ↔ tarjetas */
+    .hcarousel { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; gap:12px; margin-bottom:8px; scrollbar-width:none; }
+    .hcarousel::-webkit-scrollbar { display:none; }
+    .hcarousel-slide { flex:0 0 100%; scroll-snap-align:start; min-width:100%; }
+    .hcarousel-dots { display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
+    .hcarousel-dots .dot { width:6px; height:6px; border-radius:50%; background:#333; transition:.2s; }
+    .hcarousel-dots .dot.active { background:#f5f5f5; width:16px; border-radius:3px; }
     .debt-card, .receivable-card { transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease; }
     .debt-card:active, .receivable-card:active { transform:scale(.97); }
     .select-pulse { animation:selectPulse .45s cubic-bezier(.22,1,.36,1); }
@@ -660,6 +668,13 @@ function pickEmoji(e){
   document.getElementById("mg-emoji-display").textContent=e;
 }
 
+function updateCarouselDots(){
+  const el=document.getElementById("home-carousel");
+  const dotsWrap=document.getElementById("home-carousel-dots");
+  if(!el||!dotsWrap) return;
+  const idx=Math.round(el.scrollLeft/el.clientWidth);
+  dotsWrap.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("active",i===idx));
+}
 function toggleSideMenu(force){
   const menu=document.getElementById("side-menu");
   const overlay=document.getElementById("side-menu-overlay");
@@ -895,7 +910,38 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   const fc=getForecast();
   const pendingDebts=debts.filter(d=>d.paid<d.total);
 
-  let html=buildCardsListInicio();
+  const cardsHtml = buildCardsListInicio();
+
+  let chartHtml = "";
+  {
+    const porCategoria={};
+    filtered.filter(t=>t.tipo==="gasto").forEach(t=>{
+      const cat=t.categoria||"Otro gasto";
+      porCategoria[cat]=(porCategoria[cat]||0)+t.monto;
+    });
+    monthlyDebts.forEach(d=>{
+      const cat=d.categoria||"Otro gasto";
+      porCategoria[cat]=(porCategoria[cat]||0)+d.amount;
+    });
+    const entries=Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
+    const totalGasto=entries.reduce((s,[,v])=>s+v,0);
+    const getStyle=cat=>getCategoryStyle("gasto",cat);
+    if(totalGasto>0){
+      chartHtml = `<div class="card" style="margin-bottom:0;height:100%">
+        <div class="section-label">Gastos por categoría</div>
+        ${buildKaneDonut(entries,totalGasto,getStyle)}
+      </div>`;
+    }
+  }
+
+  let html = "";
+  // Carrusel deslizable: gráfico primero, deslizar hacia el lado para ver las tarjetas
+  html += `<div class="hcarousel" id="home-carousel" onscroll="updateCarouselDots()">
+    <div class="hcarousel-slide">${chartHtml || `<div class="card" style="text-align:center;color:#666;padding:30px 20px">Sin gastos este mes para graficar</div>`}</div>
+    <div class="hcarousel-slide">${cardsHtml}</div>
+  </div>
+  <div class="hcarousel-dots" id="home-carousel-dots"><span class="dot active"></span><span class="dot"></span></div>`;
+
   html+=`
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
@@ -940,30 +986,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
     }
   }
 
-  {
-    const porCategoria={};
-    // 1) Gastos del mes (Transacciones) — incluye categorías personalizadas creadas por el usuario
-    filtered.filter(t=>t.tipo==="gasto").forEach(t=>{
-      const cat=t.categoria||"Otro gasto";
-      porCategoria[cat]=(porCategoria[cat]||0)+t.monto;
-    });
-    // 2) Deudas mensuales (sección DEL MES)
-    monthlyDebts.forEach(d=>{
-      const cat=d.categoria||"Otro gasto";
-      porCategoria[cat]=(porCategoria[cat]||0)+d.amount;
-    });
-    const entries=Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
-    const totalGasto=entries.reduce((s,[,v])=>s+v,0);
-    const getStyle=cat=>getCategoryStyle("gasto",cat);
-    if(totalGasto>0){
-      html+=`<div class="card" style="animation-delay:.02s">
-        <div class="section-label">Gastos por categoría</div>
-        ${buildKaneDonut(entries,totalGasto,getStyle)}
-      </div>`;
-    }
-  }
-
-  // (las tarjetas ya se agregaron arriba, antes del balance)
+  // (el gráfico y las tarjetas ya se muestran arriba, en el carrusel deslizable)
 
   // Diferencia real: Ingresos vs TODAS las deudas pendientes (pagadas o no)
   const allDebtTotal = debts.reduce((s,d)=>s+(d.total-d.paid),0);
@@ -1108,25 +1131,46 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   });
 
   // Líneas guía + etiquetas tipo "pill" alrededor del donut (como redes sociales)
-  const fw=98, fh=36, PAD=4;
-  let guides="";
+  const fw=104, fh=40, PAD=6, MIN_GAP=fh+8;
+  // 1) Calcular posición "ideal" (por ángulo) de cada etiqueta, separadas por lado
+  const leftLabels=[], rightLabels=[];
   radial.forEach(r=>{
     const rad=r.angle*Math.PI/180;
     const ringX=CX+R*Math.cos(rad), ringY=CY+R*Math.sin(rad);
     const side=Math.cos(rad)>=0?1:-1;
-    let stubX=CX+side*(R+48);
-    // nunca dejar que la etiqueta se salga del viewBox
-    stubX=side>0?Math.min(stubX,VB_W-fw-PAD):Math.max(stubX,fw+PAD);
     const outY=CY+(R+48)*Math.sin(rad);
-    const stubY=Math.max(fh/2+PAD,Math.min(outY, VB_H-fh/2-PAD));
-    guides+=`<line x1="${ringX.toFixed(1)}" y1="${ringY.toFixed(1)}" x2="${stubX.toFixed(1)}" y2="${stubY.toFixed(1)}" stroke="#aaaaaa" stroke-width="1" opacity="0.55"/>`;
-    guides+=`<circle cx="${ringX.toFixed(1)}" cy="${ringY.toFixed(1)}" r="2.2" fill="${r.color}"/>`;
+    const idealY=Math.max(fh/2+PAD,Math.min(outY, VB_H-fh/2-PAD));
+    const item={...r,ringX,ringY,side,y:idealY};
+    (side>0?rightLabels:leftLabels).push(item);
+  });
+  // 2) Anti-colisión: en cada lado, ordenar por Y y separar las que quedan muy juntas
+  function separar(list){
+    list.sort((a,b)=>a.y-b.y);
+    for(let i=1;i<list.length;i++){
+      if(list[i].y-list[i-1].y<MIN_GAP) list[i].y=list[i-1].y+MIN_GAP;
+    }
+    // si se salió por abajo, recorremos todo el grupo hacia arriba
+    const overflow=list.length?list[list.length-1].y-(VB_H-fh/2-PAD):0;
+    if(overflow>0) list.forEach(item=>item.y-=overflow);
+    // y aseguramos que no se salga por arriba tampoco
+    let minY=fh/2+PAD;
+    list.forEach(item=>{ if(item.y<minY) item.y=minY; minY=item.y+MIN_GAP; });
+  }
+  separar(leftLabels); separar(rightLabels);
+  let guides="";
+  [...leftLabels,...rightLabels].forEach(r=>{
+    const side=r.side;
+    let stubX=CX+side*(R+52);
+    stubX=side>0?Math.min(stubX,VB_W-fw-PAD):Math.max(stubX,fw+PAD);
+    const stubY=r.y;
+    guides+=`<line x1="${r.ringX.toFixed(1)}" y1="${r.ringY.toFixed(1)}" x2="${stubX.toFixed(1)}" y2="${stubY.toFixed(1)}" stroke="#aaaaaa" stroke-width="1" opacity="0.5"/>`;
+    guides+=`<circle cx="${r.ringX.toFixed(1)}" cy="${r.ringY.toFixed(1)}" r="2.2" fill="${r.color}"/>`;
     const fx=side>0?stubX:stubX-fw;
     const fy=stubY-fh/2;
-    const nombreCorto=r.cat.length>13?r.cat.slice(0,12)+"…":r.cat;
+    const nombreCorto=r.cat.length>14?r.cat.slice(0,13)+"…":r.cat;
     guides+=`<foreignObject x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="${fw}" height="${fh}">
       <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;flex-direction:column;align-items:${side>0?"flex-start":"flex-end"};font-family:inherit">
-        <div style="display:inline-flex;align-items:center;gap:5px;background:${r.color}e6;border-radius:16px;padding:5px 11px;font-size:10px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35)">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:${r.color}f2;border-radius:16px;padding:6px 12px;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap;max-width:${fw}px;box-sizing:border-box;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.45)">${r.icon} ${esc(nombreCorto.toUpperCase())}</div>
         <div style="font-size:10px;color:#bbb;margin-top:3px;padding:0 2px">(${r.pct}%)</div>
       </div>
     </foreignObject>`;
@@ -2245,6 +2289,18 @@ async function fetchBankRecords(silent){
   }
   if(btn){ btn.disabled=false; btn.textContent="🔄 Actualizar movimientos"; }
   if(inlineBtn){ inlineBtn.disabled=false; inlineBtn.style.opacity="1"; }
+
+  // Fintoc tarda 1-3 min en ir a buscar el dato fresco al banco (proceso
+  // asíncrono de ellos). En vez de obligarte a volver a tocar "Actualizar",
+  // la app vuelve a consultar sola un par de minutos después, en silencio,
+  // para que el saldo/movimiento nuevo aparezca sin que hagas nada más.
+  if(!fetchBankRecords._followUpScheduled){
+    fetchBankRecords._followUpScheduled=true;
+    setTimeout(()=>{
+      fetchBankRecords._followUpScheduled=false;
+      if(sessionStorage.getItem("fin_unlocked")==="1") fetchBankRecords(true).catch(()=>{});
+    }, 150000); // 2.5 min
+  }
 }
 
 function waitForFintoc(timeoutMs){
