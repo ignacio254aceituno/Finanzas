@@ -14,7 +14,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html { height: 100%; overflow: hidden; }
-    body { font-family: 'DM Sans', sans-serif; background: #000; color: #f5f5f5; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    body { font-family: 'DM Sans', sans-serif; background: #0D0703; color: #FFF8E8; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     /* Modo claro: como casi todo el diseño usa colores fijos (no variables),
        se invierte toda la pantalla y se corrige de vuelta en imágenes/emoji
        para que no salgan con colores raros. Transición suave al cambiar. */
@@ -30,30 +30,30 @@
 
     #header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:rgba(0,0,0,.97); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid #1c1c1c; z-index:50; }
     .logo { display:flex; align-items:center; gap:9px; }
-    .logo-icon { width:32px; height:32px; border-radius:9px; background:#111; border:1px solid #2a2a2a; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#fff; }
+    .logo-icon { width:32px; height:32px; border-radius:9px; background:#1B0E05; border:1px solid #2a2a2a; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#fff; }
     .logo-text { font-weight:700; font-size:17px; letter-spacing:-.03em; }
-    #month-input { background:#0d0d0d; border:1px solid #262626; color:#999; border-radius:8px; padding:6px 10px; font-size:12px; font-family:'DM Mono',monospace; }
+    #month-input { background:#140A04; border:1px solid #262626; color:#999; border-radius:8px; padding:6px 10px; font-size:12px; font-family:'DM Mono',monospace; }
 
     #content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 16px 90px; }
 
     /* Menú lateral deslizable (reemplaza la barra inferior) */
-    #side-menu-tab { position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:120; width:26px; height:64px; border-radius:12px 0 0 12px; background:#141414; border:1px solid #2a2a2a; border-right:none; color:#eee; font-size:16px; display:flex; align-items:center; justify-content:center; padding:0; box-shadow:-4px 0 14px rgba(0,0,0,.4); transition:right .3s cubic-bezier(.22,1,.36,1); }
+    #side-menu-tab { position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:120; width:26px; height:64px; border-radius:12px 0 0 12px; background:#140A04; border:1px solid #2a2a2a; border-right:none; color:#F5EFE5; font-size:16px; display:flex; align-items:center; justify-content:center; padding:0; box-shadow:-4px 0 14px rgba(0,0,0,.4); transition:right .3s cubic-bezier(.22,1,.36,1); }
     #side-menu-tab.open { right:220px; }
     #side-menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:100; opacity:0; pointer-events:none; transition:opacity .25s ease; }
     #side-menu-overlay.open { opacity:1; pointer-events:auto; }
-    #side-menu { position:fixed; top:0; right:0; bottom:0; width:220px; background:#0a0a0a; border-left:1px solid rgba(255,255,255,.15); z-index:110; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); transform:translateX(100%); transition:transform .3s cubic-bezier(.22,1,.36,1); overflow-y:auto; }
+    #side-menu { position:fixed; top:0; right:0; bottom:0; width:220px; background:#0D0703; border-left:1px solid rgba(255,255,255,.15); z-index:110; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); transform:translateX(100%); transition:transform .3s cubic-bezier(.22,1,.36,1); overflow-y:auto; }
     #side-menu.open { transform:translateX(0); }
     .side-menu-btn { display:flex; align-items:center; gap:12px; padding:13px 20px; background:none; color:#888; font-size:14px; font-weight:600; text-align:left; transition:color .15s,background .15s; }
     .side-menu-btn svg { width:19px; height:19px; flex-shrink:0; }
     .side-menu-btn.active { color:#fff; background:rgba(255,255,255,.06); }
     .side-menu-btn:active { background:rgba(255,255,255,.1); }
-    #fab-add { position:fixed; right:20px; bottom:calc(env(safe-area-inset-bottom) + 20px); z-index:90; width:52px; height:52px; border-radius:16px; background:#f5f5f5; color:#000; font-size:26px; font-weight:300; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,.5); transition:transform .15s; }
+    #fab-add { position:fixed; right:20px; bottom:calc(env(safe-area-inset-bottom) + 20px); z-index:90; width:52px; height:52px; border-radius:16px; background:#FFF8E8; color:#0D0703; font-size:26px; font-weight:300; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,.5); transition:transform .15s; }
     #fab-add:active { transform:scale(.92); }
 
     #bg-particles { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:none; }
     #loading-screen, #lock-screen, #header, #content, #modal-overlay, #toast { position:relative; z-index:1; }
 
-    .card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .card { background:#0D0703; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:20px; margin-bottom:14px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .card:active { transform:scale(.985); }
 
     /* Carrusel deslizable de Inicio: gráfico ↔ tarjetas */
@@ -62,7 +62,7 @@
     .hcarousel-slide { flex:0 0 100%; scroll-snap-align:start; min-width:100%; }
     .hcarousel-dots { display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
     .hcarousel-dots .dot { width:6px; height:6px; border-radius:50%; background:#333; transition:.2s; }
-    .hcarousel-dots .dot.active { background:#f5f5f5; width:16px; border-radius:3px; }
+    .hcarousel-dots .dot.active { background:#FFF8E8; width:16px; border-radius:3px; }
     .debt-card, .receivable-card { transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease; }
     .debt-card:active, .receivable-card:active { transform:scale(.97); }
     .select-pulse { animation:selectPulse .45s cubic-bezier(.22,1,.36,1); }
@@ -81,29 +81,29 @@
     @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(.95); } to { opacity:1; transform:none; } }
     .section-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:600; }
 
-    #balance-card { background:#0a0a0a !important; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    #balance-card { background:#0D0703 !important; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:22px; margin-bottom:14px; position:relative; overflow:hidden; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     #balance-card:active { transform:scale(.99); }
     #balance-card .glow { display:none; }
     #balance-label { font-size:11px; color:#666; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
-    #balance-amount { font-family:'DM Mono',monospace; font-size:34px; font-weight:700; letter-spacing:-.04em; margin-bottom:16px; color:#f5f5f5; }
+    #balance-amount { font-family:'DM Mono',monospace; font-size:34px; font-weight:700; letter-spacing:-.04em; margin-bottom:16px; color:#FFF8E8; }
     .balance-row { display:flex; gap:16px; }
     .balance-stat { flex:1; }
     .balance-stat-label { font-size:10px; letter-spacing:.07em; margin-bottom:3px; font-weight:600; }
     .balance-stat-val { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; }
 
     .dist-bar-track { height:6px; border-radius:6px; background:#1a1a1a; overflow:hidden; display:flex; margin-bottom:8px; }
-    .dist-bar-in { background:#4ade80; transition:width .6s ease; }
+    .dist-bar-in { background:#E0A94F; transition:width .6s ease; }
     .dist-bar-out { flex:1; background:#f87171; }
     .dist-labels { display:flex; justify-content:space-between; font-size:12px; }
 
     .cat-row { margin-bottom:12px; }
     .cat-row-top { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
     .cat-bar-track { height:4px; border-radius:4px; background:#1a1a1a; }
-    .cat-bar-fill { height:100%; border-radius:4px; background:#f5f5f5; transition:width .5s ease; }
+    .cat-bar-fill { height:100%; border-radius:4px; background:#FFF8E8; transition:width .5s ease; }
 
     .tx-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #171717; }
     .tx-row:last-child { border-bottom:none; }
-    .tx-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; background:#111 !important; }
+    .tx-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; background:#1B0E05 !important; }
     .tx-info { flex:1; min-width:0; }
     .tx-desc { font-weight:500; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tx-sub { font-size:12px; color:#555; margin-top:2px; }
@@ -111,34 +111,34 @@
     .tx-del { background:none; color:#333; font-size:18px; padding:4px 4px 4px 8px; }
 
     .form-label { font-size:11px; color:#666; letter-spacing:.06em; text-transform:uppercase; display:block; margin-bottom:8px; font-weight:600; }
-    .form-input { width:100%; background:#000; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:13px 14px; color:#f5f5f5; font-size:16px; font-family:'DM Sans',sans-serif; }
+    .form-input { width:100%; background:#0D0703; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:13px 14px; color:#FFF8E8; font-size:16px; font-family:'DM Sans',sans-serif; }
     .form-input:focus { border-color:#555; }
-    .type-toggle { display:flex; background:#000; border-radius:0; padding:4px; border:1px solid rgba(255,255,255,.22); margin-bottom:20px; }
+    .type-toggle { display:flex; background:#0D0703; border-radius:0; padding:4px; border:1px solid rgba(255,255,255,.22); margin-bottom:20px; }
     .type-btn { flex:1; padding:11px; border-radius:9px; font-weight:700; font-size:15px; transition:all .2s; background:transparent; color:#555; }
-    .type-btn.active-in { background:rgba(74,222,128,.12); color:#4ade80; border:1px solid #1d3a26; }
+    .type-btn.active-in { background:rgba(74,222,128,.12); color:#E0A94F; border:1px solid #1d3a26; }
     .type-btn.active-out { background:rgba(248,113,113,.12); color:#f87171; border:1px solid #3a1d1d; }
     .cats-wrap { display:flex; flex-wrap:wrap; gap:8px; }
-    .cat-btn { padding:8px 13px; border-radius:0; font-size:13px; font-weight:500; background:#000; color:#666; border:1px solid rgba(255,255,255,.22); transition:all .15s; }
-    .cat-btn.selected { background:#1a1a1a; color:#f5f5f5; border-color:#444; }
-    .submit-btn { width:100%; padding:16px; border-radius:0; font-weight:700; font-size:17px; color:#000; letter-spacing:-.01em; background:#f5f5f5 !important; box-shadow:none; transition:transform .1s; }
+    .cat-btn { padding:8px 13px; border-radius:0; font-size:13px; font-weight:500; background:#0D0703; color:#666; border:1px solid rgba(255,255,255,.22); transition:all .15s; }
+    .cat-btn.selected { background:#1a1a1a; color:#FFF8E8; border-color:#444; }
+    .submit-btn { width:100%; padding:16px; border-radius:0; font-weight:700; font-size:17px; color:#0D0703; letter-spacing:-.01em; background:#FFF8E8 !important; box-shadow:none; transition:transform .1s; }
     .submit-btn:active { transform:scale(.97); }
 
-    .hist-card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .hist-card { background:#0D0703; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; animation:slideUp .25s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .hist-card:active { transform:scale(.98); }
 
     /* SAVINGS */
-    .goal-card { background:#0a0a0a; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
+    .goal-card { background:#0D0703; border:1px solid rgba(255,255,255,.22); border-radius:0; padding:18px; margin-bottom:12px; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; transition:transform .15s ease; }
     .goal-card:active { transform:scale(.98); }
     .goal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .goal-name { font-weight:700; font-size:15px; }
     .goal-progress-track { height:6px; border-radius:6px; background:#1a1a1a; margin-bottom:8px; overflow:hidden; }
-    .goal-progress-fill { height:100%; border-radius:6px; background:#f5f5f5 !important; transition:width .6s cubic-bezier(.22,1,.36,1); }
+    .goal-progress-fill { height:100%; border-radius:6px; background:#FFF8E8 !important; transition:width .6s cubic-bezier(.22,1,.36,1); }
     .goal-amounts { display:flex; justify-content:space-between; font-size:12px; color:#666; margin-bottom:10px; }
     .goal-amount-val { font-family:'DM Mono',monospace; font-size:13px; }
     .goal-actions { display:flex; gap:8px; }
-    .goal-btn { flex:1; padding:8px; border-radius:9px; font-size:13px; font-weight:600; background:#141414; color:#ddd; border:1px solid #262626; transition:all .15s; }
+    .goal-btn { flex:1; padding:8px; border-radius:9px; font-size:13px; font-weight:600; background:#140A04; color:#ddd; border:1px solid #262626; transition:all .15s; }
     .goal-btn:active { transform:scale(.96); }
-    .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#141414; color:#555; border:1px solid #262626; }
+    .goal-del-btn { padding:8px 12px; border-radius:9px; font-size:13px; background:#140A04; color:#555; border:1px solid #262626; }
 
     /* DEBTS */
     .debt-card { border-radius:0; padding:16px; margin-bottom:12px; border:1px solid rgba(255,255,255,.22); animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; display:flex; align-items:center; gap:14px; transition:transform .15s ease; }
@@ -146,7 +146,7 @@
     .animated-list-scroll { max-height:420px; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#333 transparent; mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); -webkit-mask-image:linear-gradient(to bottom, transparent, black 22px, black calc(100% - 22px), transparent); padding-top:4px; }
     .animated-list-scroll::-webkit-scrollbar { width:5px; }
     .animated-list-scroll::-webkit-scrollbar-thumb { background:#333; border-radius:10px; }
-    .debt-card.list-focused { outline:2px solid #4ade80; outline-offset:2px; }
+    .debt-card.list-focused { outline:2px solid #E0A94F; outline-offset:2px; }
     .monthly-stack-card { transition:transform .18s ease, filter .18s ease, opacity .18s ease; }
     .gradual-blur-wrap { position:relative; height:480px; overflow:hidden; border-radius:14px; }
     .gradual-blur-scroll { height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -158,7 +158,7 @@
     .gradual-blur-layer:nth-child(4){ backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); mask-image:linear-gradient(to top, black 0%, transparent 75%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 75%); }
     .gradual-blur-layer:nth-child(5){ backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); mask-image:linear-gradient(to top, black 0%, transparent 100%); -webkit-mask-image:linear-gradient(to top, black 0%, transparent 100%); }
     .debt-check { width:28px; height:28px; border-radius:50%; border:2px solid #333; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; font-size:14px; }
-    .debt-check.paid { background:#1a4030; border-color:#4ade80; }
+    .debt-check.paid { background:#1a4030; border-color:#E0A94F; }
     .debt-info { flex:1; min-width:0; }
     .debt-name { font-weight:600; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .debt-sub { font-size:12px; color:#555; margin-top:3px; }
@@ -184,7 +184,7 @@
     }
     .check-ring {
       position: fixed; width: 26px; height: 26px; border-radius: 50%;
-      border: 2px solid #4ade80; pointer-events: none; z-index: 9997;
+      border: 2px solid #E0A94F; pointer-events: none; z-index: 9997;
       transform: translate(-50%,-50%) scale(1); opacity: .85;
       animation: checkRingPulse .55s ease-out forwards;
     }
@@ -198,7 +198,7 @@
 
     /* DEBT SUMMARY BAR */
     .debt-summary { display:flex; gap:10px; margin-bottom:14px; }
-    .debt-stat { flex:1; background:#16161e; border:1px solid #2a2a3a; border-radius:14px; padding:14px; text-align:center; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; }
+    .debt-stat { flex:1; background:#1B0E05; border:1px solid rgba(224,169,79,.20); border-radius:14px; padding:14px; text-align:center; animation:slideUp .3s cubic-bezier(.22,1,.36,1) both; }
     .debt-stat-label { font-size:10px; color:#555; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px; font-weight:600; }
     .debt-stat-val { font-family:'DM Mono',monospace; font-size:17px; font-weight:700; }
 
@@ -211,24 +211,24 @@
 
     #modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:200; align-items:center; justify-content:center; animation:fadeIn .2s; }
     #modal-overlay.show { display:flex; }
-    #modal-box { background:#16161e; border:1px solid #2a2a3a; border-radius:18px; padding:24px 20px; max-width:320px; width:92%; max-height:88dvh; overflow-y:auto; }
+    #modal-box { background:#1B0E05; border:1px solid rgba(224,169,79,.20); border-radius:18px; padding:24px 20px; max-width:320px; width:92%; max-height:88dvh; overflow-y:auto; }
     .modal-title { font-size:17px; font-weight:700; margin-bottom:16px; }
     .modal-row { margin-bottom:14px; }
     .modal-btns { display:flex; gap:10px; margin-top:20px; }
     .modal-cancel { flex:1; padding:11px; border-radius:10px; background:#222; color:#888; font-size:15px; }
     .modal-confirm { flex:1; padding:11px; border-radius:10px; font-size:15px; font-weight:700; color:#fff; }
     .modal-confirm.danger { background:#7f2020; }
-    .modal-confirm.primary { background:#f5f5f5; color:#000; }
+    .modal-confirm.primary { background:#FFF8E8; color:#0D0703; }
 
-    #toast { display:none; position:fixed; bottom:calc(env(safe-area-inset-bottom) + 22px); left:20px; right:20px; margin:0 auto; max-width:380px; padding:14px 16px; border-radius:14px; font-size:13.5px; font-weight:600; box-shadow:0 14px 34px rgba(0,0,0,.55); z-index:300; background:#111; border:1px solid rgba(255,255,255,.14); border-left-width:4px; color:#f0f0f0; display:flex; align-items:center; gap:11px; animation:toastIn .3s cubic-bezier(.22,1,.36,1); }
+    #toast { display:none; position:fixed; bottom:calc(env(safe-area-inset-bottom) + 22px); left:20px; right:20px; margin:0 auto; max-width:380px; padding:14px 16px; border-radius:14px; font-size:13.5px; font-weight:600; box-shadow:0 14px 34px rgba(0,0,0,.55); z-index:300; background:#1B0E05; border:1px solid rgba(255,255,255,.14); border-left-width:4px; color:#f0f0f0; display:flex; align-items:center; gap:11px; animation:toastIn .3s cubic-bezier(.22,1,.36,1); }
     #toast.show { display:flex; }
     #toast .toast-icon { font-size:18px; flex-shrink:0; }
-    #toast.ok { border-left-color:#4ade80; }
-    #toast.ok .toast-icon { color:#4ade80; }
+    #toast.ok { border-left-color:#E0A94F; }
+    #toast.ok .toast-icon { color:#E0A94F; }
     #toast.err { border-left-color:#f87171; }
     #toast.err .toast-icon { color:#f87171; }
-    #toast.info { border-left-color:#60a5fa; }
-    #toast.info .toast-icon { color:#60a5fa; }
+    #toast.info { border-left-color:#D9962F; }
+    #toast.info .toast-icon { color:#D9962F; }
     #toast.hide { animation:toastOut .25s ease forwards; }
     @keyframes toastOut { to { opacity:0; transform:translateY(10px) scale(.97); } }
 
@@ -251,7 +251,7 @@
     .ticker-sep { color:#333; padding:0 8px; font-size:14px; }
     #ticker-bell { flex-shrink:0; padding:0 10px; font-size:14px; cursor:pointer; border-left:1px solid #2a1a4a; height:100%; display:flex; align-items:center; background:none; transition:background .15s; }
     #ticker-bell:hover { background:rgba(255,255,255,.05); }
-    #ticker-bell.on { color:#f5f5f5; }
+    #ticker-bell.on { color:#FFF8E8; }
     #ticker-bell.off { color:#444; }
   
     #lock-screen { position:fixed; inset:0; background:#0a0a0f; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px; overflow:hidden; }
@@ -265,10 +265,10 @@
     }
     #lock-screen.hidden { display:none; }
     #lock-icon { width:60px; height:60px; border-radius:18px; background:linear-gradient(135deg,#6ee7b7,#3b82f6); display:flex; align-items:center; justify-content:center; font-size:30px; }
-    #lock-input { background:#16161e; border:1px solid #2a2a3a; border-radius:12px; padding:14px 18px; color:#fff; font-size:18px; text-align:center; width:240px; letter-spacing:4px; }
-    #lock-btn, .lock-action-btn { background:#f5f5f5; color:#000; border:none; border-radius:12px; padding:13px 30px; font-size:15px; font-weight:700; }
+    #lock-input { background:#1B0E05; border:1px solid rgba(224,169,79,.20); border-radius:12px; padding:14px 18px; color:#fff; font-size:18px; text-align:center; width:240px; letter-spacing:4px; }
+    #lock-btn, .lock-action-btn { background:#FFF8E8; color:#0D0703; border:none; border-radius:12px; padding:13px 30px; font-size:15px; font-weight:700; }
     #lock-error { color:#f87171; font-size:13px; height:16px; }
-    .lock-field { background:#16161e; border:1px solid #2a2a3a; border-radius:12px; padding:14px 18px; color:#fff; font-size:16px; text-align:center; width:240px; }
+    .lock-field { background:#1B0E05; border:1px solid rgba(224,169,79,.20); border-radius:12px; padding:14px 18px; color:#fff; font-size:16px; text-align:center; width:240px; }
     .lock-view { display:none; flex-direction:column; align-items:center; gap:14px; }
     .lock-hint { color:#999; font-size:13px; text-align:center; max-width:260px; }
     .lock-link { color:#666; font-size:12px; text-decoration:underline; cursor:pointer; }
@@ -374,7 +374,7 @@
         radial-gradient(80% 42% at 50% -8%, rgba(255,255,255,.95), transparent 68%),
         radial-gradient(55% 38% at 100% 42%, rgba(10,132,255,.075), transparent 72%),
         #f5f5f7 !important;
-      color:#111 !important;
+      color:#1B0E05 !important;
     }
     body.light-mode img, body.light-mode svg image { filter:none !important; }
 
@@ -527,7 +527,7 @@
       border-radius:19px !important;
       background:linear-gradient(145deg,#fff,#dfe0e4) !important;
       box-shadow:0 16px 32px rgba(0,0,0,.32), inset 0 1px 0 #fff !important;
-      color:#111 !important;
+      color:#1B0E05 !important;
     }
     #fab-add::after {
       content:""; position:absolute; inset:3px; border-radius:16px; pointer-events:none;
@@ -875,6 +875,29 @@ p,
 
 </style>
 <script src="https://js.fintoc.com/v1/"></script>
+
+<style id="zynto-final-warm-theme">
+:root{color-scheme:dark;--zy-bg:#0D0703;--zy-surface:#15100B;--zy-surface2:#1D150D;--zy-gold:#E0A94F;--zy-gold2:#C58A32;--zy-light:#FFF0C9;--zy-muted:#A99B88;--zy-line:rgba(224,169,79,.22)}
+html,body{background:#0D0703 !important;color:#F5EFE5 !important}
+body{background-image:radial-gradient(700px 520px at 8% -10%,rgba(184,111,22,.20),transparent 60%),radial-gradient(620px 520px at 92% 18%,rgba(224,169,79,.12),transparent 62%),linear-gradient(180deg,#0D0703 0%,#140A04 52%,#0D0703 100%) !important}
+#header{background:rgba(20,10,4,.78) !important;border-color:var(--zy-line) !important;backdrop-filter:blur(24px) saturate(130%) !important;-webkit-backdrop-filter:blur(24px) saturate(130%) !important}
+.logo-icon{background:linear-gradient(145deg,#E0A94F,#8B4E0D) !important;color:#0D0703 !important;border-color:rgba(255,240,201,.32) !important;box-shadow:0 8px 26px rgba(184,111,22,.22) !important}
+.logo-text{color:#FFF0C9 !important}
+.card,.debt-card,.monthly-stack-card,.goal-card,.tx-card,.modal-box,.side-menu,.balance-card,.bank-card{background:linear-gradient(145deg,rgba(48,27,10,.70),rgba(21,16,11,.78)) !important;border-color:var(--zy-line) !important;box-shadow:0 18px 55px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,240,201,.07) !important;backdrop-filter:blur(18px) saturate(125%) !important;-webkit-backdrop-filter:blur(18px) saturate(125%) !important}
+.form-input,input,select,textarea{background:rgba(36,19,7,.82) !important;color:#FFF0C9 !important;border-color:rgba(224,169,79,.24) !important}
+.form-input:focus,input:focus,select:focus,textarea:focus{border-color:#E0A94F !important;box-shadow:0 0 0 3px rgba(224,169,79,.12) !important}
+button.primary,.primary,.fab{background:linear-gradient(135deg,#EAB45C,#B86F16) !important;color:#0D0703 !important;border-color:rgba(255,240,201,.20) !important;box-shadow:0 10px 28px rgba(184,111,22,.22) !important}
+button,.type-btn,.cat-btn,.goal-btn{border-color:rgba(224,169,79,.20) !important}
+.section-label,.form-label{color:#CDBB9D !important}
+.balance-amount,.money,.amount,.goal-amount-val{color:#FFF0C9 !important}
+.progress,.goal-progress-track{background:#241307 !important}.goal-progress-fill{background:linear-gradient(90deg,#B86F16,#E0A94F) !important}
+.debt-check,.debt-card{border-color:rgba(224,169,79,.22) !important}.debt-check.paid{background:rgba(224,169,79,.18) !important;border-color:#E0A94F !important;color:#FFF0C9 !important}
+#month-input{background:#140A04 !important;color:#CDBB9D !important;border-color:rgba(224,169,79,.22) !important}
+::-webkit-scrollbar-thumb{background:#8B4E0D !important}
+/* Evita que el modo claro invierta la paleta cálida. */
+body.light-mode{filter:none !important;background:#F7EFE1 !important;color:#2A1A0B !important}
+body.light-mode #header,body.light-mode .card,body.light-mode .modal-box{background:rgba(255,248,232,.90) !important;color:#2A1A0B !important}
+</style>
 </head>
 <body>
 
@@ -933,10 +956,10 @@ p,
     <input id="lock-input" class="lock-field" type="password" placeholder="Contraseña" autocomplete="current-password" />
     <div id="lock-error"></div>
     <button id="lock-btn" onclick="checkPassword()">Entrar</button>
-    <button id="faceid-btn" onclick="unlockWithFaceID()" class="lock-action-btn" style="display:none;background:#0a0a0a;border:1px solid #262626;color:#f5f5f5">🆔 Usar Face ID</button>
+    <button id="faceid-btn" onclick="unlockWithFaceID()" class="lock-action-btn" style="display:none;background:#0D0703;border:1px solid #262626;color:#FFF8E8">🆔 Usar Face ID</button>
     <div id="faceid-setup" onclick="setupFaceID()" class="lock-link" style="display:none">Activar Face ID</div>
     <div onclick="showForgotRequest()" class="lock-link" style="margin-top:4px">¿Olvidaste tu contraseña?</div>
-    <div onclick="showRegister()" class="lock-link">¿No tienes cuenta? <b style="color:#f5f5f5">Crear cuenta</b></div>
+    <div onclick="showRegister()" class="lock-link">¿No tienes cuenta? <b style="color:#FFF8E8">Crear cuenta</b></div>
   </div>
 
   <div id="lock-view-register" class="lock-view">
@@ -947,7 +970,7 @@ p,
     <input id="reg-pass" class="lock-field" type="password" placeholder="Contraseña" autocomplete="new-password" />
     <input id="reg-pass2" class="lock-field" type="password" placeholder="Confirmar contraseña" autocomplete="new-password" />
     <div id="reg-error" style="color:#f87171;font-size:13px"></div>
-    <button class="lock-action-btn" onclick="registerAccount()" style="background:#f5f5f5;color:#000;font-weight:800">Crear cuenta</button>
+    <button class="lock-action-btn" onclick="registerAccount()" style="background:#FFF8E8;color:#0D0703;font-weight:800">Crear cuenta</button>
     <div onclick="backToLogin()" class="lock-link">Volver a iniciar sesión</div>
   </div>
 
@@ -975,7 +998,7 @@ p,
   <div style="font-size:19px;font-weight:800">¿Activar notificaciones?</div>
   <div style="font-size:14px;color:#999;line-height:1.55;max-width:320px">Te avisamos cuando se acerque el vencimiento de una deuda, una cuota o un gasto del mes. Puedes cambiar esto cuando quieras desde Configuración.</div>
   <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:10px">
-    <button onclick="respondNotifPermission(true)" style="background:#f5f5f5;color:#000;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer">Activar notificaciones</button>
+    <button onclick="respondNotifPermission(true)" style="background:#FFF8E8;color:#0D0703;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer">Activar notificaciones</button>
     <button onclick="respondNotifPermission(false)" style="background:none;border:1px solid #333;color:#999;border-radius:12px;padding:14px;font-size:14px;font-weight:600;cursor:pointer">Ahora no</button>
   </div>
 </div>
@@ -986,9 +1009,9 @@ p,
     <span class="logo-text">Zynto</span>
   </div>
   <input type="month" id="month-input" />
-  <button id="sync-btn" onclick="manualSync()" title="Sincronizar con Google Sheets" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🔄</button>
-  <button id="tutorial-btn" onclick="startTutorial()" title="Ver tutorial" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🎓</button>
-  <button id="settings-btn" onclick="setView('settings')" title="Configuración" style="background:#0a0a0a;border:1px solid #262626;color:#eee;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">⚙️</button>
+  <button id="sync-btn" onclick="manualSync()" title="Sincronizar con Google Sheets" style="background:#0D0703;border:1px solid #262626;color:#F5EFE5;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🔄</button>
+  <button id="tutorial-btn" onclick="startTutorial()" title="Ver tutorial" style="background:#0D0703;border:1px solid #262626;color:#F5EFE5;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🎓</button>
+  <button id="settings-btn" onclick="setView('settings')" title="Configuración" style="background:#0D0703;border:1px solid #262626;color:#F5EFE5;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">⚙️</button>
 </div>
 
 <!-- TICKER -->
@@ -1370,12 +1393,12 @@ function buildCuotasCard(c){
     const pct=Math.round((x.actual/x.total)*100);
     return `<div style="padding:9px 0;border-bottom:1px solid #1e1e28">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <div style="font-size:12.5px;font-weight:700;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%">${esc(x.nombre)}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:12.5px;font-weight:800;color:#f0f0f5">${fmt(x.monto)}</div>
+        <div style="font-size:12.5px;font-weight:700;color:#F5EFE5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%">${esc(x.nombre)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12.5px;font-weight:800;color:#F5EFE5">${fmt(x.monto)}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1;height:5px;background:#1a1a24;border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:#f5f5f5;border-radius:3px"></div>
+        <div style="flex:1;height:5px;background:#241307;border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:#FFF8E8;border-radius:3px"></div>
         </div>
         <div style="font-size:10.5px;color:#999;white-space:nowrap">${x.actual} de ${x.total}${restantes>0?` · faltan ${restantes}`:" · última cuota"}</div>
       </div>
@@ -1384,7 +1407,7 @@ function buildCuotasCard(c){
   return `<div class="card" style="margin-top:8px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
       <div class="section-label" style="margin:0">📊 Cuotas — ${esc(c.banco||c.cuenta)} •••• ${c.numero?String(c.numero).slice(-4):""}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:#a78bfa">${fmt(totalMes)}/mes</div>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:800;color:#E0A94F">${fmt(totalMes)}/mes</div>
     </div>
     ${rows}
   </div>`;
@@ -1413,7 +1436,7 @@ function buildBigCard(c,i){
       <div style="position:absolute;bottom:-30px;left:-16px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;z-index:1">
         <div style="font-size:14.5px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.35);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nombreBanco)}</div>
-        <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;margin-top:4px"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:#E0A94F;box-shadow:0 0 6px #E0A94F;flex-shrink:0;margin-top:4px"></div>
       </div>
       <div style="z-index:1;display:flex;align-items:flex-end;justify-content:space-between">
         <div>
@@ -1428,7 +1451,7 @@ function buildBigCard(c,i){
     </div>
     <div style="flex:1;min-width:0">
       <div style="font-size:9.5px;color:#666;letter-spacing:.04em">DISPONIBLE</div>
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:18px;color:${tieneDisponible?(disponible>=0?"#4ade80":"#f87171"):"#666"};margin-bottom:3px">${tieneDisponible?fmt(disponible):"—"}</div>
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:18px;color:${tieneDisponible?(disponible>=0?"#E0A94F":"#f87171"):"#666"};margin-bottom:3px">${tieneDisponible?fmt(disponible):"—"}</div>
       ${tieneCupo?`<div style="font-size:10.5px;color:#888">Cupo total: <b style="color:#aaa">${fmt(cupoTotal)}</b></div>`:""}
       ${esCredito&&c.gastado>0?`<div style="font-size:10.5px;color:#888;margin-top:2px">Gastado este mes: ${fmt(c.gastado)}</div>`:""}
     </div>
@@ -1531,17 +1554,17 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
     <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
     <div id="balance-label">Balance real (incluye deudas)</div>
-    <div id="balance-amount" style="color:${positive?"#4ade80":"#f87171"}">${fmt(0)}</div>
+    <div id="balance-amount" style="color:${positive?"#E0A94F":"#f87171"}">${fmt(0)}</div>
     <div class="balance-row" style="flex-wrap:wrap;gap:10px">
-      <div class="balance-stat"><div class="balance-stat-label" style="color:#4ade80">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
-      <div style="width:1px;background:#2a2a3a"></div>
+      <div class="balance-stat"><div class="balance-stat-label" style="color:#E0A94F">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
+      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
       <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#f87171">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
-      <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#4ade80"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
-      <div style="width:100%;height:1px;background:#2a2a3a"></div>
+      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#E0A94F"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
+      <div style="width:100%;height:1px;background:rgba(224,169,79,.20)"></div>
       <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
-      <div style="width:1px;background:#2a2a3a"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#4ade80":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
+      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#E0A94F":"#f87171"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
     </div>
   </div>`;
 
@@ -1552,20 +1575,20 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
         <div class="section-label">💰 Dinero disponible real (Fintoc)</div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e2a35">
           <div style="font-size:12.5px;color:#999">${fr.principal?esc(fr.principal.banco||fr.principal.cuenta)+" · cta. principal":"Cuenta corriente principal"}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#4ade80">${fmt(fr.principal?.disponible||0)}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#E0A94F">${fmt(fr.principal?.disponible||0)}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e2a35">
           <div style="font-size:12.5px;color:#999">Resto de cuentas corrientes${fr.resto.length?` (${fr.resto.length})`:""}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#4ade80">${fmt(fr.restoSum)}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#E0A94F">${fmt(fr.restoSum)}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px">
           <div style="font-size:13px;color:#ccc;font-weight:700">Total disponible en cuentas</div>
-          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#4ade80">${fmt(fr.totalCorrientes)}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#E0A94F">${fmt(fr.totalCorrientes)}</div>
         </div>
         <div style="height:1px;background:#1e2a35;margin:8px 0"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-size:13px;color:#ccc;font-weight:700">💳 Crédito total disponible${fr.creditos.length?` (${fr.creditos.length} cuenta${fr.creditos.length>1?"s":""})`:""}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#a78bfa">${fmt(fr.creditoTotal)}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:17px;font-weight:800;color:#E0A94F">${fmt(fr.creditoTotal)}</div>
         </div>
       </div>`;
     }
@@ -1583,7 +1606,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
         <div style="font-size:11px;color:#888;margin-bottom:3px">Ingresos: ${fmt(totalIn)}</div>
         <div style="font-size:11px;color:#888">Deudas totales: ${fmt(allDebtTotal)}</div>
       </div>
-      <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:${diferencia>=0?"#4ade80":"#f87171"}">${fmt(diferencia)}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:${diferencia>=0?"#E0A94F":"#f87171"}">${fmt(diferencia)}</div>
     </div>
   </div>`;
 
@@ -1606,12 +1629,12 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
             </div>`;
           }).join("")}
           ${pendingDebts.length>3?`<div style="font-size:12px;color:#555">+${pendingDebts.length-3} más...</div>`:""}
-          ${pendingDebts.length===0?`<div style="font-size:13px;color:#4ade80">✓ Sin deudas pendientes</div>`:""}
+          ${pendingDebts.length===0?`<div style="font-size:13px;color:#E0A94F">✓ Sin deudas pendientes</div>`:""}
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0;border-left:1px solid #2a2a3a;padding-left:14px">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0;border-left:1px solid rgba(224,169,79,.20);padding-left:14px">
           <div>
             <div style="font-size:10px;color:#555;letter-spacing:.06em;margin-bottom:3px">TOTAL</div>
-            <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:${totalDebt>0?"#fb923c":"#4ade80"}">${fmt(totalDebt)}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:${totalDebt>0?"#fb923c":"#E0A94F"}">${fmt(totalDebt)}</div>
           </div>
           <div style="font-size:11px;color:#4c3d9a;margin-top:8px">Ver deudas →</div>
         </div>
@@ -1627,7 +1650,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
         ${totalIn>0?`<div class="dist-bar-in" style="width:${pIn}%"></div>`:""}
         ${totalOut>0?`<div class="dist-bar-out"></div>`:""}
       </div>
-      <div class="dist-labels"><span style="color:#4ade80">Ingresos ${pIn}%</span><span style="color:#f87171">Gastos ${100-pIn}%</span></div>
+      <div class="dist-labels"><span style="color:#E0A94F">Ingresos ${pIn}%</span><span style="color:#f87171">Gastos ${100-pIn}%</span></div>
     </div>`;
   }
 
@@ -1635,8 +1658,8 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
     html+=`<div class="card" style="animation-delay:.11s;cursor:pointer" onclick="setView('savings')">
       <div class="section-label">Ahorro</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:20px;font-family:'DM Mono',monospace;font-weight:700;color:#38bdf8">${fmt(totalSaved)}</div><div style="font-size:12px;color:#555;margin-top:3px">${goals.length} meta${goals.length!==1?"s":""}</div></div>
-        ${fc&&fc.avgSave>0?`<div style="text-align:right"><div style="font-size:10px;color:#555;margin-bottom:2px">Previsión 6 meses</div><div style="font-size:17px;font-family:'DM Mono',monospace;font-weight:600;color:#818cf8">${fmt(fc.avgSave*6)}</div></div>`:""}
+        <div><div style="font-size:20px;font-family:'DM Mono',monospace;font-weight:700;color:#D9962F">${fmt(totalSaved)}</div><div style="font-size:12px;color:#555;margin-top:3px">${goals.length} meta${goals.length!==1?"s":""}</div></div>
+        ${fc&&fc.avgSave>0?`<div style="text-align:right"><div style="font-size:10px;color:#555;margin-bottom:2px">Previsión 6 meses</div><div style="font-size:17px;font-family:'DM Mono',monospace;font-weight:600;color:#EAB45C">${fmt(fc.avgSave*6)}</div></div>`:""}
       </div>
       <div style="margin-top:10px;font-size:12px;color:#4c3d9a">Ver metas →</div>
     </div>`;
@@ -1653,10 +1676,10 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
 
   html+=`<div class="card" style="animation-delay:.17s;padding:20px 16px"><div class="section-label" style="padding:0 4px">Últimas transacciones</div>`;
   if(recent.length===0){
-    html+=`<div class="empty"><div class="empty-icon">📊</div>Sin transacciones este mes.<br><button onclick="setView('add')" style="margin-top:14px;background:#1e1e2e;border:1px solid #2a2a3a;color:#888;border-radius:8px;padding:8px 18px;font-size:13px;">Añadir una</button></div>`;
+    html+=`<div class="empty"><div class="empty-icon">📊</div>Sin transacciones este mes.<br><button onclick="setView('add')" style="margin-top:14px;background:#1e1e2e;border:1px solid rgba(224,169,79,.20);color:#888;border-radius:8px;padding:8px 18px;font-size:13px;">Añadir una</button></div>`;
   } else {
     recent.forEach(tx=>{
-      const col=tx.tipo==="ingreso"?"#4ade80":"#f87171";
+      const col=tx.tipo==="ingreso"?"#E0A94F":"#f87171";
       const bg=tx.tipo==="ingreso"?"rgba(74,222,128,.1)":"rgba(248,113,113,.1)";
       html+=`<div class="tx-row"><div class="tx-icon" style="background:${bg}">${ICONS[tx.categoria]}</div><div class="tx-info"><div class="tx-desc">${esc(tx.descripcion)}</div><div class="tx-sub">${tx.categoria} · ${fmtDate(tx.fecha)}</div></div><div class="tx-amount" style="color:${col}">${tx.tipo==="ingreso"?"+":"-"}${fmt(tx.monto)}</div><button class="tx-del" onclick="askDeleteTx(${tx.id})">×</button></div>`;
     });
@@ -1675,7 +1698,7 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   const restVal=rest.reduce((s,[,v])=>s+v,0);
   
   // Colores para "Otros" con degradado
-  const restColors=["#ec4899","#f59e0b","#10b981","#06b6d4","#8b5cf6","#ef4444"];
+  const restColors=["#ec4899","#f59e0b","#10b981","#D9962F","#8b5cf6","#ef4444"];
   
   const items=[...top];
   if(rest.length) items.push(["Otros",restVal]);
@@ -1772,7 +1795,7 @@ function buildKaneDonut(entries,totalGasto,getStyle){
     const style=getStyle(cat);
     const isHighlight=idx<4;
     
-    legend+=`<div style="display:flex;align-items:center;gap:8px;background:${isHighlight?style.color+"11":"#16161e"};border:1.5px solid ${isHighlight?style.color+"55":"#2a2a3a"};border-radius:11px;padding:10px 12px;transition:all .25s;cursor:pointer" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='${isHighlight?style.color+"88":"#3a3a4a"}';this.style.background='${isHighlight?style.color+"1a":"#1a1a2e"}'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='${isHighlight?style.color+"55":"#2a2a3a"}';this.style.background='${isHighlight?style.color+"11":"#16161e"}'">
+    legend+=`<div style="display:flex;align-items:center;gap:8px;background:${isHighlight?style.color+"11":"#1B0E05"};border:1.5px solid ${isHighlight?style.color+"55":"rgba(224,169,79,.20)"};border-radius:11px;padding:10px 12px;transition:all .25s;cursor:pointer" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='${isHighlight?style.color+"88":"#3a3a4a"}';this.style.background='${isHighlight?style.color+"1a":"#1a1a2e"}'" onmouseout="this.style.transform='translateY(0)';this.style.borderColor='${isHighlight?style.color+"55":"rgba(224,169,79,.20)"}';this.style.background='${isHighlight?style.color+"11":"#1B0E05"}'">
       <div style="width:14px;height:14px;border-radius:50%;background:${style.color};box-shadow:0 0 10px ${style.color}77;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${style.icon} ${cat}</div>
@@ -1787,7 +1810,7 @@ function buildKaneDonut(entries,totalGasto,getStyle){
   // Center total con efecto
   const centerTopPct=(CY/VB_H*100).toFixed(1);
   const center=`<div style="position:absolute;top:${centerTopPct}%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:1">
-    <div style="font-size:22px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
+    <div style="font-size:22px;font-family:'DM Mono',monospace;font-weight:900;background:linear-gradient(135deg,#E0A94F,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em">${fmt(totalGasto)}</div>
     <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:600">Presupuesto</div>
   </div>`;
   
@@ -1808,9 +1831,9 @@ function buildKaneDonut(entries,totalGasto,getStyle){
 }
 function renderDebts(el){
   window.__lastDebtsEl = el;
-  let html=`<div style="display:flex;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:4px;margin-bottom:14px;gap:4px">
-    <button onclick="setDebtsSubTab('debo')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${debtsSubTab==="debo"?"linear-gradient(135deg,#f97316,#ef4444)":"none"};color:${debtsSubTab==="debo"?"#fff":"#666"}">Debo yo</button>
-    <button onclick="setDebtsSubTab('medeben')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${debtsSubTab==="medeben"?"linear-gradient(135deg,#22c55e,#0ea5e9)":"none"};color:${debtsSubTab==="medeben"?"#fff":"#666"}">Me deben</button>
+  let html=`<div style="display:flex;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:12px;padding:4px;margin-bottom:14px;gap:4px">
+    <button onclick="setDebtsSubTab('debo')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${debtsSubTab==="debo"?"linear-gradient(135deg,#B86F16,#ef4444)":"none"};color:${debtsSubTab==="debo"?"#fff":"#666"}">Debo yo</button>
+    <button onclick="setDebtsSubTab('medeben')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${debtsSubTab==="medeben"?"linear-gradient(135deg,#B86F16,#D9962F)":"none"};color:${debtsSubTab==="medeben"?"#fff":"#666"}">Me deben</button>
   </div>`;
   el.innerHTML=html;
   const sub=document.createElement("div");
@@ -1829,18 +1852,18 @@ function renderMyDebts(el){
   let html=`
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
     <div style="font-size:15px;font-weight:700">Mis deudas</div>
-    <button onclick="openAddDebtModal()" style="background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva deuda</button>
+    <button onclick="openAddDebtModal()" style="background:linear-gradient(135deg,#B86F16,#ef4444);color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva deuda</button>
   </div>
 
   <div class="debt-summary">
     <div class="debt-stat" style="animation-delay:0s">
       <div class="debt-stat-label">Por pagar</div>
-      <div class="debt-stat-val" style="color:${totalPending>0?"#fb923c":"#4ade80"}">${fmt(totalPending)}</div>
+      <div class="debt-stat-val" style="color:${totalPending>0?"#fb923c":"#E0A94F"}">${fmt(totalPending)}</div>
       <div style="font-size:11px;color:#555;margin-top:3px">${pending.length} deuda${pending.length!==1?"s":""}</div>
     </div>
     <div class="debt-stat" style="animation-delay:.05s">
       <div class="debt-stat-label">Pagadas</div>
-      <div class="debt-stat-val" style="color:#4ade80">${fmt(totalPaid)}</div>
+      <div class="debt-stat-val" style="color:#E0A94F">${fmt(totalPaid)}</div>
       <div style="font-size:11px;color:#555;margin-top:3px">${paid.length} deuda${paid.length!==1?"s":""}</div>
     </div>
     ${overdueCount>0?`<div class="debt-stat" style="animation-delay:.08s;border-color:#4a1a1a;background:#1a0a0a">
@@ -1850,11 +1873,11 @@ function renderMyDebts(el){
     </div>`:""}
   </div>`;
 
-  html+=`<div id="debt-selection-bar" style="display:none;position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#1a1030,#0d0a1a);border:2px solid #4ade80;border-radius:16px;padding:14px 18px;margin-bottom:14px;flex-direction:column;gap:6px">
+  html+=`<div id="debt-selection-bar" style="display:none;position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#1a1030,#0d0a1a);border:2px solid #E0A94F;border-radius:16px;padding:14px 18px;margin-bottom:14px;flex-direction:column;gap:6px">
     <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>
-        <span style="font-size:13px;color:#4ade80;font-weight:700;letter-spacing:.03em" id="debt-selection-count">0 seleccionadas</span>
+        <div style="width:10px;height:10px;border-radius:50%;background:#E0A94F"></div>
+        <span style="font-size:13px;color:#E0A94F;font-weight:700;letter-spacing:.03em" id="debt-selection-count">0 seleccionadas</span>
       </div>
       <button onclick="clearDebtSelection()" style="background:none;border:none;color:#555;font-size:18px;cursor:pointer;padding:0 4px">×</button>
     </div>
@@ -1881,7 +1904,7 @@ function renderMyDebts(el){
         const pct=Math.round((d.paid/d.total)*100);
         const overdue=d.vencimiento&&d.vencimiento<todayStr();
         const duesSoon=d.vencimiento&&!overdue&&d.vencimiento<=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
-        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0a0a0a"};border:1px solid ${overdue?"#5a2020":duesSoon?"#5a3a10":"rgba(255,255,255,.22)"};cursor:pointer" onclick="toggleDebtCard(this)">
+        html+=`<div class="debt-card" data-debt-id="${d.id}" data-remain="${remain}" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0D0703"};border:1px solid ${overdue?"#5a2020":duesSoon?"#5a3a10":"rgba(255,255,255,.22)"};cursor:pointer" onclick="toggleDebtCard(this)">
           <div class="debt-checkbox" style="width:26px;height:26px;border-radius:50%;border:2px solid #333;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center;margin-right:4px;transition:all .2s;font-size:14px"></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -1889,7 +1912,7 @@ function renderMyDebts(el){
               ${overdue?`<span style="font-size:10px;background:rgba(248,113,113,.15);color:#f87171;padding:2px 7px;border-radius:5px;flex-shrink:0">VENCIDA</span>`:duesSoon?`<span style="font-size:10px;background:rgba(251,146,60,.15);color:#fb923c;padding:2px 7px;border-radius:5px;flex-shrink:0">PRÓXIMA</span>`:""}
             </div>
             <div style="height:5px;border-radius:5px;background:#1e1e2e;margin-bottom:6px;overflow:hidden">
-              <div style="height:100%;border-radius:5px;width:${pct}%;background:${overdue?"linear-gradient(90deg,#f87171,#ef4444)":"linear-gradient(90deg,#fb923c,#f97316)"};transition:width .5s"></div>
+              <div style="height:100%;border-radius:5px;width:${pct}%;background:${overdue?"linear-gradient(90deg,#f87171,#ef4444)":"linear-gradient(90deg,#fb923c,#B86F16)"};transition:width .5s"></div>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:11px;color:#555">
               <span>Pagado ${fmt(d.paid)} (${pct}%)</span>
@@ -1902,8 +1925,8 @@ function renderMyDebts(el){
               <div style="font-size:11px;color:#555">de ${fmt(d.total)}</div>
             </div>
             <div style="display:flex;gap:6px">
-              <button onclick="openPayDebtModal(${d.id})" style="background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700">Pagar</button>
-              <button onclick="askDeleteDebt(${d.id})" style="background:#1e1e2e;color:#444;border:1px solid #2a2a3a;border-radius:8px;padding:6px 8px;font-size:14px">✕</button>
+              <button onclick="openPayDebtModal(${d.id})" style="background:linear-gradient(135deg,#B86F16,#ef4444);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700">Pagar</button>
+              <button onclick="askDeleteDebt(${d.id})" style="background:#1e1e2e;color:#444;border:1px solid rgba(224,169,79,.20);border-radius:8px;padding:6px 8px;font-size:14px">✕</button>
             </div>
           </div>
         </div>`;
@@ -1917,12 +1940,12 @@ function renderMyDebts(el){
       paid.forEach((d,i)=>{
         html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0a0d0a;border:1px solid rgba(255,255,255,.14);opacity:.7">
           <div style="flex:1;min-width:0">
-            <div class="debt-name" style="color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
+            <div class="debt-name" style="color:#E0A94F;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
             <div style="font-size:12px;color:#3a6a3a;margin-top:3px">${d.categoria||"General"}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <div style="font-family:'DM Mono',monospace;font-size:15px;color:#4ade80">${fmt(d.total)}</div>
-            <div style="width:24px;height:24px;border-radius:50%;background:#1a4030;border:2px solid #4ade80;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
+            <div style="font-family:'DM Mono',monospace;font-size:15px;color:#E0A94F">${fmt(d.total)}</div>
+            <div style="width:24px;height:24px;border-radius:50%;background:#1a4030;border:2px solid #E0A94F;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
             <button onclick="askDeleteDebt(${d.id})" style="background:none;color:#333;font-size:16px">✕</button>
           </div>
         </div>`;
@@ -1962,18 +1985,18 @@ function renderReceivables(el){
   let html=`
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
     <div style="font-size:15px;font-weight:700">Personas que me deben</div>
-    <button onclick="openAddReceivableModal()" style="background:linear-gradient(135deg,#22c55e,#0ea5e9);color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva</button>
+    <button onclick="openAddReceivableModal()" style="background:linear-gradient(135deg,#B86F16,#D9962F);color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva</button>
   </div>
 
   <div class="debt-summary">
     <div class="debt-stat" style="animation-delay:0s">
       <div class="debt-stat-label">Por cobrar</div>
-      <div class="debt-stat-val" style="color:${totalPending>0?"#0ea5e9":"#4ade80"}">${fmt(totalPending)}</div>
+      <div class="debt-stat-val" style="color:${totalPending>0?"#D9962F":"#E0A94F"}">${fmt(totalPending)}</div>
       <div style="font-size:11px;color:#555;margin-top:3px">${pending.length} persona${pending.length!==1?"s":""}</div>
     </div>
     <div class="debt-stat" style="animation-delay:.05s">
       <div class="debt-stat-label">Cobrado</div>
-      <div class="debt-stat-val" style="color:#4ade80">${fmt(totalPaid)}</div>
+      <div class="debt-stat-val" style="color:#E0A94F">${fmt(totalPaid)}</div>
       <div style="font-size:11px;color:#555;margin-top:3px">${paid.length} persona${paid.length!==1?"s":""}</div>
     </div>
     ${overdueCount>0?`<div class="debt-stat" style="animation-delay:.08s;border-color:#4a1a1a;background:#1a0a0a">
@@ -1984,7 +2007,7 @@ function renderReceivables(el){
   </div>`;
 
   if(receivables.length===0){
-    html+=`<div class="card"><div class="empty"><div class="empty-icon">🤝</div>Nadie te debe (por ahora).<br><button onclick="openAddReceivableModal()" style="margin-top:14px;background:#0a1a1a;border:1px solid #204a4a;color:#0ea5e9;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Agregar primera persona</button></div></div>`;
+    html+=`<div class="card"><div class="empty"><div class="empty-icon">🤝</div>Nadie te debe (por ahora).<br><button onclick="openAddReceivableModal()" style="margin-top:14px;background:#0a1a1a;border:1px solid #204a4a;color:#D9962F;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Agregar primera persona</button></div></div>`;
   } else {
     if(pending.length>0){
       html+=`<div class="section-label" style="margin-top:4px;margin-bottom:8px">POR COBRAR</div>`;
@@ -1992,14 +2015,14 @@ function renderReceivables(el){
         const remain=r.total-r.paid;
         const pct=Math.round((r.paid/r.total)*100);
         const overdue=r.vencimiento&&r.vencimiento<todayStr();
-        html+=`<div class="debt-card" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0a0a0a"};border:1px solid ${overdue?"#5a2020":"rgba(255,255,255,.22)"}">
+        html+=`<div class="debt-card" style="animation-delay:${i*.05}s;background:${overdue?"#140a0a":"#0D0703"};border:1px solid ${overdue?"#5a2020":"rgba(255,255,255,.22)"}">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <div class="debt-name">${esc(r.name)}</div>
               ${overdue?`<span style="font-size:10px;background:rgba(248,113,113,.15);color:#f87171;padding:2px 7px;border-radius:5px;flex-shrink:0">ATRASADA</span>`:""}
             </div>
             <div style="height:5px;border-radius:5px;background:#1e1e2e;margin-bottom:6px;overflow:hidden">
-              <div style="height:100%;border-radius:5px;width:${pct}%;background:linear-gradient(90deg,#22c55e,#0ea5e9);transition:width .5s"></div>
+              <div style="height:100%;border-radius:5px;width:${pct}%;background:linear-gradient(90deg,#B86F16,#D9962F);transition:width .5s"></div>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:11px;color:#555">
               <span>Cobrado ${fmt(r.paid)} (${pct}%)</span>
@@ -2008,12 +2031,12 @@ function renderReceivables(el){
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;margin-left:12px">
             <div style="text-align:right">
-              <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px;color:#0ea5e9">${fmt(remain)}</div>
+              <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:17px;color:#D9962F">${fmt(remain)}</div>
               <div style="font-size:11px;color:#555">de ${fmt(r.total)}</div>
             </div>
             <div style="display:flex;gap:6px">
-              <button onclick="openCollectReceivableModal(${r.id})" style="background:linear-gradient(135deg,#22c55e,#0ea5e9);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700">Cobrar</button>
-              <button onclick="askDeleteReceivable(${r.id})" style="background:#1e1e2e;color:#444;border:1px solid #2a2a3a;border-radius:8px;padding:6px 8px;font-size:14px">✕</button>
+              <button onclick="openCollectReceivableModal(${r.id})" style="background:linear-gradient(135deg,#B86F16,#D9962F);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700">Cobrar</button>
+              <button onclick="askDeleteReceivable(${r.id})" style="background:#1e1e2e;color:#444;border:1px solid rgba(224,169,79,.20);border-radius:8px;padding:6px 8px;font-size:14px">✕</button>
             </div>
           </div>
         </div>`;
@@ -2024,12 +2047,12 @@ function renderReceivables(el){
       paid.forEach((r,i)=>{
         html+=`<div class="debt-card" style="animation-delay:${i*.04}s;background:#0a0d0a;border:1px solid rgba(255,255,255,.14);opacity:.7">
           <div style="flex:1;min-width:0">
-            <div class="debt-name" style="color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(r.name)}</div>
+            <div class="debt-name" style="color:#E0A94F;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(r.name)}</div>
             <div style="font-size:12px;color:#3a6a3a;margin-top:3px">${r.nota||"General"}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <div style="font-family:'DM Mono',monospace;font-size:15px;color:#4ade80">${fmt(r.total)}</div>
-            <div style="width:24px;height:24px;border-radius:50%;background:#1a4030;border:2px solid #4ade80;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
+            <div style="font-family:'DM Mono',monospace;font-size:15px;color:#E0A94F">${fmt(r.total)}</div>
+            <div style="width:24px;height:24px;border-radius:50%;background:#1a4030;border:2px solid #E0A94F;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
             <button onclick="askDeleteReceivable(${r.id})" style="background:none;color:#333;font-size:16px">✕</button>
           </div>
         </div>`;
@@ -2052,12 +2075,12 @@ function openCollectReceivableModal(id){
   if(!r) return;
   const remain=r.total-r.paid;
   openModal(`Cobrar a ${esc(r.name)}`,
-    `<div class="modal-row"><label class="form-label">Monto cobrado ($)</label><input id="r-pay" class="form-input" type="number" min="0.01" step="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:20px" /><div style="font-size:12px;color:#666;margin-top:6px">Pendiente: <strong style="color:#0ea5e9">${fmt(remain)}</strong></div></div>`,
+    `<div class="modal-row"><label class="form-label">Monto cobrado ($)</label><input id="r-pay" class="form-input" type="number" min="0.01" step="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:20px" /><div style="font-size:12px;color:#666;margin-top:6px">Pendiente: <strong style="color:#D9962F">${fmt(remain)}</strong></div></div>`,
     "Registrar cobro","primary","collectReceivable",{id});
 }
 function askDeleteReceivable(id){
   const r=receivables.find(r=>r.id===id);
-  openModal("¿Eliminar persona?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#f0f0f5">"${esc(r.name)}"</strong> y su historial. Esta acción no se puede deshacer.</div>`,"Eliminar","danger","deleteReceivable",{id});
+  openModal("¿Eliminar persona?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#F5EFE5">"${esc(r.name)}"</strong> y su historial. Esta acción no se puede deshacer.</div>`,"Eliminar","danger","deleteReceivable",{id});
 }
 
 function toggleDebtCard(card){
@@ -2066,16 +2089,16 @@ function toggleDebtCard(card){
   const checkbox = card.querySelector(".debt-checkbox");
   if(isSelected){
     card.dataset.selected = "0";
-    card.style.border = `1px solid ${card.dataset.overdue==="1"?"#4a1a1a":card.dataset.soon==="1"?"#4a3010":"#2a2a3a"}`;
+    card.style.border = `1px solid ${card.dataset.overdue==="1"?"#4a1a1a":card.dataset.soon==="1"?"#4a3010":"rgba(224,169,79,.20)"}`;
     checkbox.style.background = "transparent";
     checkbox.style.borderColor = "#333";
     checkbox.style.color = "transparent";
   } else {
     card.dataset.selected = "1";
-    card.style.border = "2px solid #4ade80";
-    checkbox.style.background = "#4ade80";
-    checkbox.style.borderColor = "#4ade80";
-    checkbox.style.color = "#000";
+    card.style.border = "2px solid #E0A94F";
+    checkbox.style.background = "#E0A94F";
+    checkbox.style.borderColor = "#E0A94F";
+    checkbox.style.color = "#0D0703";
     checkbox.textContent = "✓";
     celebrateCheck(checkbox);
   }
@@ -2118,7 +2141,7 @@ function celebrateCheck(checkbox){
 function clearDebtSelection(){
   document.querySelectorAll(".debt-card[data-selected='1']").forEach(c=>{
     c.dataset.selected="0";
-    c.style.border=`1px solid #2a2a3a`;
+    c.style.border=`1px solid rgba(224,169,79,.20)`;
     const cb=c.querySelector(".debt-checkbox");
     if(cb){ cb.style.background="transparent"; cb.style.borderColor="#333"; cb.textContent=""; }
   });
@@ -2156,7 +2179,7 @@ function openPayDebtModal(id){
 
 function askDeleteDebt(id){
   const d=debts.find(d=>d.id===id);
-  openModal("¿Eliminar deuda?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#f0f0f5">"${esc(d.name)}"</strong> y su historial. Esta acción no se puede deshacer.</div>`,"Eliminar","danger","deleteDebt",{id});
+  openModal("¿Eliminar deuda?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#F5EFE5">"${esc(d.name)}"</strong> y su historial. Esta acción no se puede deshacer.</div>`,"Eliminar","danger","deleteDebt",{id});
 }
 
 // ── SAVINGS ───────────────────────────────────────────────
@@ -2172,8 +2195,8 @@ function renderSavings(el){
   } else {
     const maxP=Math.max(...fc.forecast.map(f=>Math.abs(f.projected)),1);
     html+=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-      <div><div style="font-size:11px;color:#4a6a8a;letter-spacing:.06em;margin-bottom:3px">AHORRO MENSUAL EST.</div><div style="font-size:26px;font-family:'DM Mono',monospace;font-weight:700;color:${fc.avgSave>=0?"#38bdf8":"#f87171"}">${fmt(fc.avgSave)}</div></div>
-      <div style="text-align:right"><div style="font-size:11px;color:#4a6a8a;letter-spacing:.06em;margin-bottom:3px">EN 6 MESES</div><div style="font-size:20px;font-family:'DM Mono',monospace;font-weight:700;color:${fc.avgSave*6>=0?"#818cf8":"#f87171"}">${fmt(fc.avgSave*6)}</div></div>
+      <div><div style="font-size:11px;color:#4a6a8a;letter-spacing:.06em;margin-bottom:3px">AHORRO MENSUAL EST.</div><div style="font-size:26px;font-family:'DM Mono',monospace;font-weight:700;color:${fc.avgSave>=0?"#D9962F":"#f87171"}">${fmt(fc.avgSave)}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#4a6a8a;letter-spacing:.06em;margin-bottom:3px">EN 6 MESES</div><div style="font-size:20px;font-family:'DM Mono',monospace;font-weight:700;color:${fc.avgSave*6>=0?"#EAB45C":"#f87171"}">${fmt(fc.avgSave*6)}</div></div>
     </div>
     <div class="forecast-bar-wrap">`;
     fc.forecast.forEach((f,i)=>{
@@ -2194,11 +2217,11 @@ function renderSavings(el){
 
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
     <div style="font-size:15px;font-weight:700">Metas de ahorro</div>
-    <button onclick="openNewGoalModal()" style="background:#f5f5f5;color:#000;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva meta</button>
+    <button onclick="openNewGoalModal()" style="background:#FFF8E8;color:#0D0703;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700">+ Nueva meta</button>
   </div>`;
 
   if(goals.length===0){
-    html+=`<div class="card"><div class="empty"><div class="empty-icon">🏦</div>Sin metas aún.<br><button onclick="openNewGoalModal()" style="margin-top:14px;background:#141414;border:1px solid #2a2a2a;color:#f5f5f5;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Crear primera meta</button></div></div>`;
+    html+=`<div class="card"><div class="empty"><div class="empty-icon">🏦</div>Sin metas aún.<br><button onclick="openNewGoalModal()" style="margin-top:14px;background:#140A04;border:1px solid #2a2a2a;color:#FFF8E8;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;">Crear primera meta</button></div></div>`;
   } else {
     goals.forEach((g,i)=>{
       const saved=g.saved||0;
@@ -2206,12 +2229,12 @@ function renderSavings(el){
       const remain=Math.max(g.target-saved,0);
       const done=saved>=g.target;
       let etaText="";
-      if(fc&&fc.avgSave>0&&!done){ const months=Math.ceil(remain/fc.avgSave); etaText=`<span style="color:#38bdf8;font-size:11px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 7px;border-radius:5px;margin-left:6px">~${months} mes${months!==1?"es":""}</span>`; }
-      else if(done){ etaText=`<span style="color:#4ade80;font-size:11px;background:rgba(74,222,128,.1);padding:2px 7px;border-radius:5px;margin-left:6px">✓ Completada</span>`; }
+      if(fc&&fc.avgSave>0&&!done){ const months=Math.ceil(remain/fc.avgSave); etaText=`<span style="color:#D9962F;font-size:11px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 7px;border-radius:5px;margin-left:6px">~${months} mes${months!==1?"es":""}</span>`; }
+      else if(done){ etaText=`<span style="color:#E0A94F;font-size:11px;background:rgba(74,222,128,.1);padding:2px 7px;border-radius:5px;margin-left:6px">✓ Completada</span>`; }
       html+=`<div class="goal-card" style="animation-delay:${.12+i*.06}s">
         <div class="goal-header"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:26px">${g.emoji}</div><div><div class="goal-name">${esc(g.name)}${etaText}</div><div style="font-size:12px;color:#555;margin-top:2px">${pct}% completado</div></div></div><button class="goal-del-btn" onclick="askDeleteGoal(${g.id})">✕</button></div>
-        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:${pct}%;background:${done?"linear-gradient(90deg,#34d399,#4ade80)":"linear-gradient(90deg,#38bdf8,#818cf8)"}"></div></div>
-        <div class="goal-amounts"><div><div style="font-size:10px;color:#555;margin-bottom:2px">AHORRADO</div><div class="goal-amount-val" style="color:#38bdf8">${fmt(saved)}</div></div><div style="text-align:right"><div style="font-size:10px;color:#555;margin-bottom:2px">META</div><div class="goal-amount-val">${fmt(g.target)}</div></div></div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:${pct}%;background:${done?"linear-gradient(90deg,#C58A32,#E0A94F)":"linear-gradient(90deg,#D9962F,#EAB45C)"}"></div></div>
+        <div class="goal-amounts"><div><div style="font-size:10px;color:#555;margin-bottom:2px">AHORRADO</div><div class="goal-amount-val" style="color:#D9962F">${fmt(saved)}</div></div><div style="text-align:right"><div style="font-size:10px;color:#555;margin-bottom:2px">META</div><div class="goal-amount-val">${fmt(g.target)}</div></div></div>
         <div class="goal-actions"><button class="goal-btn" onclick="openDepositModal(${g.id},false)">＋ Depositar</button>${saved>0?`<button class="goal-btn" style="color:#f87171;background:rgba(248,113,113,.07);border-color:#3a1a1a" onclick="openDepositModal(${g.id},true)">− Retirar</button>`:""}</div>
       </div>`;
     });
@@ -2222,7 +2245,7 @@ function renderSavings(el){
 // ── ADD FORM ──────────────────────────────────────────────
 function renderAdd(el){
   const cats=getCats(form.tipo); const isIn=form.tipo==="ingreso";
-  const btnGrad=isIn?"linear-gradient(135deg,#34d399,#059669)":"linear-gradient(135deg,#f87171,#dc2626)";
+  const btnGrad=isIn?"linear-gradient(135deg,#C58A32,#8B4E0D)":"linear-gradient(135deg,#f87171,#dc2626)";
   el.innerHTML=`<div class="card">
     <div class="type-toggle">
       <button class="type-btn ${!isIn?"active-out":""}" onclick="setFormTipo('gasto')">↓ Gasto</button>
@@ -2256,7 +2279,7 @@ function ingresoGastoBlock_(tipo,filtered){
   });
   const entries=Object.entries(porCat).sort((a,b)=>b[1].total-a[1].total);
   const isIngreso=tipo==="ingreso";
-  const accent=isIngreso?"#4ade80":"#f87171";
+  const accent=isIngreso?"#E0A94F":"#f87171";
   const groups=entries.map(([cat,data])=>{
     const style=getCategoryStyle(tipo,cat);
     const pct=total>0?Math.round(data.total/total*100):0;
@@ -2272,8 +2295,8 @@ function ingresoGastoBlock_(tipo,filtered){
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:38px;height:38px;border-radius:12px;background:${style.color}22;border:1.3px solid ${style.color}55;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${style.icon}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13.5px;font-weight:700;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cat)}</div>
-          <div style="height:4px;background:#1a1a24;border-radius:3px;margin-top:6px;overflow:hidden">
+          <div style="font-size:13.5px;font-weight:700;color:#F5EFE5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cat)}</div>
+          <div style="height:4px;background:#241307;border-radius:3px;margin-top:6px;overflow:hidden">
             <div style="height:100%;width:${pct}%;background:${style.color};border-radius:3px"></div>
           </div>
         </div>
@@ -2306,9 +2329,9 @@ function renderHistory(el,filtered){
   const sorted=[...filtered].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
   if(!sorted.length){ el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div>Sin transacciones en este período.</div>`; return; }
   el.innerHTML=sorted.map((tx,i)=>{
-    const col=tx.tipo==="ingreso"?"#4ade80":"#f87171";
+    const col=tx.tipo==="ingreso"?"#E0A94F":"#f87171";
     const bg=tx.tipo==="ingreso"?"rgba(74,222,128,.1)":"rgba(248,113,113,.1)";
-    const tagCol=tx.tipo==="ingreso"?"#4ade80":"#f87171";
+    const tagCol=tx.tipo==="ingreso"?"#E0A94F":"#f87171";
     return `<div class="hist-card" style="animation-delay:${i*.03}s">
       <div class="tx-icon" style="background:${bg};width:44px;height:44px;border-radius:13px;font-size:21px">${ICONS[tx.categoria]}</div>
       <div style="flex:1;min-width:0"><div class="tx-desc" style="font-size:15px">${esc(tx.descripcion)}</div><div class="tx-sub" style="margin-top:4px"><span style="background:${bg};color:${tagCol};padding:1px 7px;border-radius:5px;font-size:11px;margin-right:6px">${tx.tipo==="ingreso"?"↑":"↓"} ${tx.categoria}</span>${fmtDate(tx.fecha)}</div></div>
@@ -2326,7 +2349,7 @@ function openNewGoalModal(){
     <div class="modal-row"><label class="form-label">Nombre</label><input id="mg-name" class="form-input" placeholder="Ej: Viaje a Europa" /></div>
     <div class="modal-row"><label class="form-label">Monto objetivo ($)</label><input id="mg-target" class="form-input" type="number" min="1" placeholder="0" style="font-family:'DM Mono',monospace;font-size:18px" /></div>`,
     "Crear meta","primary","addGoal",{});
-  setTimeout(()=>{ const f=document.querySelector('.emoji-opt'); if(f){ f.classList.add('selected'); f.style.background='#1a1a1a'; f.style.borderColor='#555'; f.style.color='#f5f5f5'; } },50);
+  setTimeout(()=>{ const f=document.querySelector('.emoji-opt'); if(f){ f.classList.add('selected'); f.style.background='#1a1a1a'; f.style.borderColor='#555'; f.style.color='#FFF8E8'; } },50);
 }
 function openDepositModal(id,isWithdraw){
   const g=goals.find(g=>g.id===id);
@@ -2336,7 +2359,7 @@ function openDepositModal(id,isWithdraw){
 }
 function askDeleteGoal(id){
   const g=goals.find(g=>g.id===id);
-  openModal("¿Eliminar meta?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#f0f0f5">"${esc(g.name)}"</strong> y su historial.</div>`,"Eliminar","danger","deleteGoal",{id});
+  openModal("¿Eliminar meta?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#F5EFE5">"${esc(g.name)}"</strong> y su historial.</div>`,"Eliminar","danger","deleteGoal",{id});
 }
 function askDeleteTx(id){
   openModal("¿Eliminar transacción?",`<div style="color:#888;font-size:14px">Esta acción no se puede deshacer.</div>`,"Eliminar","danger","deleteTx",{id});
@@ -2345,14 +2368,14 @@ function askDeleteTx(id){
 // ── CONFIGURACIÓN ────────────────────────────────────────
 function stRow(icon,label,right,onclick){
   return `<div onclick="${onclick||''}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;${onclick?'cursor:pointer':''}">
-    <div style="width:26px;text-align:center;font-size:18px;color:#eee">${icon}</div>
-    <div style="flex:1;font-size:15px;font-weight:600;color:#f0f0f5">${label}</div>
+    <div style="width:26px;text-align:center;font-size:18px;color:#F5EFE5">${icon}</div>
+    <div style="flex:1;font-size:15px;font-weight:600;color:#F5EFE5">${label}</div>
     ${right||'<div style="color:#555;font-size:16px">›</div>'}
   </div>`;
 }
 function stSection(title,rowsHtml){
   return `<div style="font-size:11px;font-weight:800;color:#666;letter-spacing:.06em;margin:18px 0 8px 4px;text-transform:uppercase">${title}</div>
-  <div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;overflow:hidden">${rowsHtml}</div>`;
+  <div style="background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;overflow:hidden">${rowsHtml}</div>`;
 }
 function stDivider(){ return `<div style="height:1px;background:#22222e;margin-left:56px"></div>`; }
 
@@ -2383,10 +2406,10 @@ const TUTORIAL_STEPS=[
 // inspirado en el estilo que pediste — sin usar el wallpaper de Apple,
 // que tiene derechos de autor.
 const TUTORIAL_BG_IMG = `
-  radial-gradient(ellipse 480px 420px at 15% 125%, #2dd4bf 0%, #134e4a 38%, transparent 70%),
+  radial-gradient(ellipse 480px 420px at 15% 125%, #B86F16 0%, #134e4a 38%, transparent 70%),
   radial-gradient(ellipse 420px 460px at 85% -10%, #3b82f6 0%, #1e3a8a 35%, transparent 68%),
-  radial-gradient(ellipse 320px 320px at 95% 85%, #0ea5e9 0%, transparent 65%),
-  #060608`;
+  radial-gradient(ellipse 320px 320px at 95% 85%, #D9962F 0%, transparent 65%),
+  #0D0703`;
 
 function renderTutorial(el){
   const rows=TUTORIAL_STEPS.map(s=>`
@@ -2400,7 +2423,7 @@ function renderTutorial(el){
 
   el.innerHTML=`
   <div style="position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;background:rgba(0,0,0,.5)">
-    <div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0a0a;border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 -20px 60px rgba(0,0,0,.6)">
+    <div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0D0703;border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 -20px 60px rgba(0,0,0,.6)">
 
       <div style="position:relative;padding:34px 24px 22px;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;background:${TUTORIAL_BG_IMG};background-size:cover;flex-shrink:0;overflow:hidden">
         <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:3px;background:rgba(255,255,255,.35)"></div>
@@ -2411,8 +2434,8 @@ function renderTutorial(el){
         ${rows}
       </div>
 
-      <div style="padding:16px 24px calc(env(safe-area-inset-bottom) + 16px);flex-shrink:0;background:#0a0a0a;border-top:1px solid rgba(255,255,255,.06)">
-        <button onclick="closeTutorial()" style="width:100%;background:#f5f5f5;color:#000;border:none;border-radius:999px;padding:15px;font-size:15.5px;font-weight:800;cursor:pointer">Continuar</button>
+      <div style="padding:16px 24px calc(env(safe-area-inset-bottom) + 16px);flex-shrink:0;background:#0D0703;border-top:1px solid rgba(255,255,255,.06)">
+        <button onclick="closeTutorial()" style="width:100%;background:#FFF8E8;color:#0D0703;border:none;border-radius:999px;padding:15px;font-size:15.5px;font-weight:800;cursor:pointer">Continuar</button>
       </div>
     </div>
   </div>`;
@@ -2422,14 +2445,14 @@ function closeTutorial(){ save("fin_tutorial_seen",true); setView("dashboard"); 
 
 function renderSettings(el){
   const acc=getAccount()||{name:"Usuario",username:"usuario",email:""};
-  const glass=`<div onclick="toggleGlassEffect()" style="width:44px;height:26px;border-radius:14px;background:${glassEffect?'#4ade80':'#333'};position:relative;cursor:pointer;transition:.2s">
+  const glass=`<div onclick="toggleGlassEffect()" style="width:44px;height:26px;border-radius:14px;background:${glassEffect?'#E0A94F':'#333'};position:relative;cursor:pointer;transition:.2s">
      <div style="position:absolute;top:2px;left:${glassEffect?'20px':'2px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s"></div>
    </div>`;
-  const themeSwitch=`<div onclick="toggleLightMode()" style="width:44px;height:26px;border-radius:14px;background:${lightMode?'#4ade80':'#333'};position:relative;cursor:pointer;transition:.2s">
+  const themeSwitch=`<div onclick="toggleLightMode()" style="width:44px;height:26px;border-radius:14px;background:${lightMode?'#E0A94F':'#333'};position:relative;cursor:pointer;transition:.2s">
      <div style="position:absolute;top:2px;left:${lightMode?'20px':'2px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s;display:flex;align-items:center;justify-content:center;font-size:12px">${lightMode?'☀️':'🌙'}</div>
    </div>`;
   const notifPerm = load("fin_notif_permission", null);
-  const notifStatusLabel = notifPerm==="granted" ? '<div style="color:#4ade80;font-size:14px">Activadas</div>' : notifPerm==="denied" ? '<div style="color:#666;font-size:14px">Desactivadas</div>' : '<div style="color:#666;font-size:14px">Sin definir</div>';
+  const notifStatusLabel = notifPerm==="granted" ? '<div style="color:#E0A94F;font-size:14px">Activadas</div>' : notifPerm==="denied" ? '<div style="color:#666;font-size:14px">Desactivadas</div>' : '<div style="color:#666;font-size:14px">Sin definir</div>';
   el.innerHTML=`
   <div style="font-size:15px;font-weight:700;margin-bottom:14px">Configuración</div>
 
@@ -2484,24 +2507,24 @@ function renderAccountScreen(el){
   const acc=getAccount()||{name:"",username:"",email:""};
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
+    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#F5EFE5">‹</div>
     <div style="font-size:15px;font-weight:700">Cuenta</div>
   </div>
-  <div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+  <div style="background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Nombre completo</div>
-      <input id="acc-name" value="${esc(acc.name)}" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="acc-name" value="${esc(acc.name)}" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Nombre de usuario</div>
-      <input id="acc-username" value="${esc(acc.username)}" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="acc-username" value="${esc(acc.username)}" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Correo electrónico</div>
-      <input id="acc-email" type="email" value="${esc(acc.email)}" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="acc-email" type="email" value="${esc(acc.email)}" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div id="acc-error" style="color:#f87171;font-size:13px"></div>
-    <button onclick="saveAccountEdits()" style="background:#f5f5f5;color:#000;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Guardar cambios</button>
+    <button onclick="saveAccountEdits()" style="background:#FFF8E8;color:#0D0703;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Guardar cambios</button>
   </div>`;
 }
 function saveAccountEdits(){
@@ -2517,24 +2540,24 @@ function saveAccountEdits(){
 function renderSecurityScreen(el){
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
+    <div onclick="setView('settings')" style="cursor:pointer;font-size:20px;color:#F5EFE5">‹</div>
     <div style="font-size:15px;font-weight:700">Seguridad</div>
   </div>
-  <div style="background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+  <div style="background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Contraseña actual</div>
-      <input id="sec-old" type="password" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="sec-old" type="password" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Nueva contraseña</div>
-      <input id="sec-new1" type="password" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="sec-new1" type="password" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div>
       <div style="font-size:11px;color:#666;margin-bottom:5px">Confirmar nueva contraseña</div>
-      <input id="sec-new2" type="password" style="width:100%;background:#0d0d12;border:1px solid #2a2a3a;border-radius:10px;padding:11px;color:#f0f0f5;font-size:14px" />
+      <input id="sec-new2" type="password" style="width:100%;background:#0d0d12;border:1px solid rgba(224,169,79,.20);border-radius:10px;padding:11px;color:#F5EFE5;font-size:14px" />
     </div>
     <div id="sec-error" style="color:#f87171;font-size:13px"></div>
-    <button onclick="changePassword()" style="background:#f5f5f5;color:#000;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
+    <button onclick="changePassword()" style="background:#FFF8E8;color:#0D0703;font-weight:800;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">Actualizar contraseña</button>
   </div>`;
 }
 async function changePassword(){
@@ -2569,7 +2592,7 @@ function renderTools(el){
   let html=`
   <div style="font-size:15px;font-weight:700;margin-bottom:14px">Herramientas</div>
   <div class="card" onclick="setView('creditos')" style="cursor:pointer;display:flex;align-items:center;gap:14px">
-    <div style="width:42px;height:42px;border-radius:12px;background:#141414;border:1px solid #262626;display:flex;align-items:center;justify-content:center;font-size:20px">🏦</div>
+    <div style="width:42px;height:42px;border-radius:12px;background:#140A04;border:1px solid #262626;display:flex;align-items:center;justify-content:center;font-size:20px">🏦</div>
     <div style="flex:1">
       <div style="font-weight:700;font-size:14.5px">Créditos bancarios</div>
       <div style="font-size:12px;color:#666;margin-top:2px">Tasa, cuotas, proyección y seguimiento de pagos</div>
@@ -2587,11 +2610,11 @@ function renderCategorias(el){
   let html=`
   <div class="card" style="margin-bottom:16px">
     <div style="font-size:13px;color:#888;margin-bottom:10px">Crea tus propias categorías de gasto o ingreso — por ejemplo "Gasolina", "Mascota" o "Freelance extra" — y van a aparecer junto a las categorías normales cuando registres un movimiento.</div>
-    <div style="display:flex;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:4px;margin-bottom:14px;gap:4px">
+    <div style="display:flex;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:12px;padding:4px;margin-bottom:14px;gap:4px">
       <button onclick="setToolsTab('gasto')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsTab==="gasto"?"linear-gradient(135deg,#f87171,#dc2626)":"none"};color:${toolsTab==="gasto"?"#fff":"#666"}">↓ Gasto</button>
-      <button onclick="setToolsTab('ingreso')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsTab==="ingreso"?"linear-gradient(135deg,#34d399,#059669)":"none"};color:${toolsTab==="ingreso"?"#fff":"#666"}">↑ Ingreso</button>
+      <button onclick="setToolsTab('ingreso')" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:${toolsTab==="ingreso"?"linear-gradient(135deg,#C58A32,#8B4E0D)":"none"};color:${toolsTab==="ingreso"?"#fff":"#666"}">↑ Ingreso</button>
     </div>
-    <button onclick="openAddCategoryModal()" style="width:100%;background:#0a0a0a;border:1px dashed #333;color:#eee;border-radius:12px;padding:12px;font-size:14px;font-weight:600">+ Nueva categoría de ${toolsTab==="gasto"?"gasto":"ingreso"}</button>
+    <button onclick="openAddCategoryModal()" style="width:100%;background:#0D0703;border:1px dashed #333;color:#F5EFE5;border-radius:12px;padding:12px;font-size:14px;font-weight:600">+ Nueva categoría de ${toolsTab==="gasto"?"gasto":"ingreso"}</button>
   </div>`;
 
   html+=`<div class="section-label" style="margin-bottom:8px">CATEGORÍAS BASE</div>
@@ -2603,7 +2626,7 @@ function renderCategorias(el){
   } else {
     html+=`<div style="display:flex;flex-direction:column;gap:8px">`;
     list.forEach(c=>{
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:12px 14px">
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:12px;padding:12px 14px">
         <div style="font-size:14px;font-weight:600">${c.icon} ${esc(c.name)}</div>
         <button onclick="askDeleteCategory('${esc(c.name)}')" style="background:none;color:#444;font-size:16px">✕</button>
       </div>`;
@@ -2756,7 +2779,7 @@ function renderCreditos(el){
 
         <div style="display:flex;gap:8px">
           <button onclick="marcarCuotaCredito(${idx},-1)" ${pagadas<=0?"disabled":""} style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;opacity:${pagadas<=0?".4":"1"}">− Cuota atrás</button>
-          <button onclick="marcarCuotaCredito(${idx},1)" ${pagadas>=cr.cuotasTotal?"disabled":""} style="flex:1;background:#fff;color:#000;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;opacity:${pagadas>=cr.cuotasTotal?".4":"1"}">✓ Marcar cuota pagada</button>
+          <button onclick="marcarCuotaCredito(${idx},1)" ${pagadas>=cr.cuotasTotal?"disabled":""} style="flex:1;background:#fff;color:#0D0703;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;opacity:${pagadas>=cr.cuotasTotal?".4":"1"}">✓ Marcar cuota pagada</button>
         </div>
       </div>
     </div>`;
@@ -2764,9 +2787,9 @@ function renderCreditos(el){
 
   el.innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <div onclick="setView('tools')" style="cursor:pointer;font-size:20px;color:#eee">‹</div>
+      <div onclick="setView('tools')" style="cursor:pointer;font-size:20px;color:#F5EFE5">‹</div>
       <div style="font-size:15px;font-weight:700;flex:1">Créditos bancarios</div>
-      <button onclick="openAddCreditoModal()" style="background:#f5f5f5;color:#000;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer">+ Nuevo</button>
+      <button onclick="openAddCreditoModal()" style="background:#FFF8E8;color:#0D0703;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer">+ Nuevo</button>
     </div>
     ${creditos.length?rows:`<div class="card" style="text-align:center;color:#666;padding:30px 20px">
       <div style="font-size:32px;margin-bottom:10px">🏦</div>
@@ -2825,7 +2848,7 @@ function renderRegistros(el){
   let html=`
   <div class="card" style="margin-bottom:16px">
     <div style="font-size:13px;color:#888;margin-bottom:12px">Movimientos reales de tus cuentas y tarjetas, traídos automáticamente desde tu banco vía Fintoc. Se guardan en la pestaña <strong style="color:#ccc">Registros</strong> de tu Google Sheet.</div>
-    <button id="fintoc-sync-btn" onclick="fetchBankRecords()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#22c55e);color:#fff;border-radius:12px;padding:12px;font-size:14px;font-weight:700">🔄 Actualizar movimientos</button>
+    <button id="fintoc-sync-btn" onclick="fetchBankRecords()" style="width:100%;background:linear-gradient(135deg,#D9962F,#B86F16);color:#fff;border-radius:12px;padding:12px;font-size:14px;font-weight:700">🔄 Actualizar movimientos</button>
     <div id="fintoc-status" style="font-size:12px;color:#666;margin-top:8px;text-align:center"></div>
   </div>`;
 
@@ -2836,12 +2859,12 @@ function renderRegistros(el){
     html+=`<section class="gradual-blur-wrap"><div class="gradual-blur-scroll" style="display:flex;flex-direction:column;gap:8px;padding-bottom:6rem">`;
     sorted.forEach(r=>{
       const isIn=r.monto>0;
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#16161e;border:1px solid #2a2a3a;border-radius:12px;padding:12px 14px;gap:10px">
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:12px;padding:12px 14px;gap:10px">
         <div style="min-width:0;flex:1">
           <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.descripcion||"Movimiento")}</div>
           <div style="font-size:11px;color:#555;margin-top:2px">${esc(r.cuenta||"")} · ${r.fecha?fmtDate(r.fecha.slice(0,10)):""}</div>
         </div>
-        <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:${isIn?"#4ade80":"#f87171"};flex-shrink:0">${isIn?"+":""}${fmt(r.monto)}</div>
+        <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:${isIn?"#E0A94F":"#f87171"};flex-shrink:0">${isIn?"+":""}${fmt(r.monto)}</div>
       </div>`;
     });
     html+=`</div>
@@ -3006,7 +3029,7 @@ function openAddCategoryModal(){
     "Crear categoría","primary","addCategory",{});
 }
 function askDeleteCategory(name){
-  openModal("¿Eliminar categoría?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#f0f0f5">"${esc(name)}"</strong>. Las transacciones ya registradas con esta categoría no se modifican.</div>`,"Eliminar","danger","deleteCategory",{name});
+  openModal("¿Eliminar categoría?",`<div style="color:#888;font-size:14px">Se eliminará <strong style="color:#F5EFE5">"${esc(name)}"</strong>. Las transacciones ya registradas con esta categoría no se modifican.</div>`,"Eliminar","danger","deleteCategory",{name});
 }
 
 // ── FORM ACTIONS ──────────────────────────────────────────
@@ -3029,26 +3052,26 @@ function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").rep
 // ── ESTILOS DE CATEGORÍA (color + ícono) — compartidos entre el gráfico y la pestaña Ingresos/Gastos ──
 const CAT_STYLE_GASTO={
   "Alimentación":{color:"#f87171",icon:"🍽️"},
-  "Transporte":{color:"#38bdf8",icon:"🚗"},
-  "Vivienda":{color:"#fbbf24",icon:"🏡"},
+  "Transporte":{color:"#D9962F",icon:"🚗"},
+  "Vivienda":{color:"#EAB45C",icon:"🏡"},
   "Salud":{color:"#fb7185",icon:"❤️"},
   "Entretenimiento":{color:"#c084fc",icon:"🎬"},
   "Ropa":{color:"#facc15",icon:"👗"},
   "Educación":{color:"#22d3ee",icon:"📚"},
-  "Servicios":{color:"#818cf8",icon:"💡"},
+  "Servicios":{color:"#EAB45C",icon:"💡"},
   "Otro gasto":{color:"#94a3b8",icon:"📦"}
 };
 const CAT_STYLE_INGRESO={
-  "Sueldo":{color:"#4ade80",icon:"💵"},
-  "Bono":{color:"#34d399",icon:"🎁"},
-  "Freelance":{color:"#2dd4bf",icon:"💻"},
-  "Inversión":{color:"#22c55e",icon:"📈"},
+  "Sueldo":{color:"#E0A94F",icon:"💵"},
+  "Bono":{color:"#C58A32",icon:"🎁"},
+  "Freelance":{color:"#B86F16",icon:"💻"},
+  "Inversión":{color:"#B86F16",icon:"📈"},
   "Regalo":{color:"#a3e635",icon:"🎉"},
   "Ventas":{color:"#10b981",icon:"🛍️"},
-  "Reembolso":{color:"#4ade80",icon:"↩️"},
+  "Reembolso":{color:"#E0A94F",icon:"↩️"},
   "Otro ingreso":{color:"#86efac",icon:"💰"}
 };
-const CUSTOM_PALETTE_=["#34d399","#f472b6","#60a5fa","#fbbf24","#a78bfa","#fb7185","#4ade80","#f97316","#2dd4bf","#e879f9"];
+const CUSTOM_PALETTE_=["#C58A32","#f472b6","#D9962F","#EAB45C","#E0A94F","#fb7185","#E0A94F","#B86F16","#B86F16","#EAB45C"];
 function hashColor_(str){ let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return CUSTOM_PALETTE_[h%CUSTOM_PALETTE_.length]; }
 function getCategoryStyle(tipo,cat){
   const fixedMap=tipo==="ingreso"?CAT_STYLE_INGRESO:CAT_STYLE_GASTO;
@@ -3080,7 +3103,7 @@ function buildTickerText() {
     const remain = d.total - d.paid;
     items.push({ text:`💳 ${d.name}: -${fmt(remain)}`, color: d.vencimiento&&d.vencimiento<today?"#f87171":"#fb923c", dot: d.vencimiento&&d.vencimiento<today?"#f87171":"#fb923c" });
   });
-  items.push({ text:`📊 Total pendiente: ${fmt(totalPending)}`, color:"#a78bfa", dot:"#6366f1" });
+  items.push({ text:`📊 Total pendiente: ${fmt(totalPending)}`, color:"#E0A94F", dot:"#6366f1" });
   return { items, urgent: overdue.length > 0 };
 }
 
@@ -3556,21 +3579,21 @@ function renderMonthlyDebts(el){
   let html=`
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div style="font-weight:700;font-size:15px">Deudas del mes</div>
-    <button onclick="openAddMonthlyModal()" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Agregar</button>
+    <button onclick="openAddMonthlyModal()" style="background:linear-gradient(135deg,#f59e0b,#B86F16);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Agregar</button>
   </div>
 
   <div style="display:flex;gap:9px;margin-bottom:14px">
-    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
+    <div style="flex:1;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:12px;text-align:center">
       <div style="font-size:10px;color:#f59e0b;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">POR PAGAR</div>
       <div style="font-family:monospace;font-size:17px;font-weight:700;color:#f59e0b">${fmt(totalPending)}</div>
       <div style="font-size:11px;color:#555;margin-top:2px">${pending.length} ítem${pending.length!==1?"s":""}</div>
     </div>
-    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
-      <div style="font-size:10px;color:#4ade80;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">PAGADAS</div>
-      <div style="font-family:monospace;font-size:17px;font-weight:700;color:#4ade80">${fmt(totalPaid)}</div>
+    <div style="flex:1;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:#E0A94F;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">PAGADAS</div>
+      <div style="font-family:monospace;font-size:17px;font-weight:700;color:#E0A94F">${fmt(totalPaid)}</div>
       <div style="font-size:11px;color:#555;margin-top:2px">${paid.length} ítem${paid.length!==1?"s":""}</div>
     </div>
-    <div style="flex:1;background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:12px;text-align:center">
+    <div style="flex:1;background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:12px;text-align:center">
       <div style="font-size:10px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:600">TOTAL</div>
       <div style="font-family:monospace;font-size:17px;font-weight:700">${fmt(total)}</div>
       <div style="font-size:11px;color:#555;margin-top:2px">${monthlyDebts.length} ítem${monthlyDebts.length!==1?"s":""}</div>
@@ -3578,7 +3601,7 @@ function renderMonthlyDebts(el){
   </div>`;
 
   if(monthlyDebts.length===0){
-    html+=`<div style="background:#16161e;border:1px solid #2a2a3a;border-radius:16px;padding:36px 20px;text-align:center;color:#444">
+    html+=`<div style="background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:16px;padding:36px 20px;text-align:center;color:#444">
       <div style="font-size:40px;margin-bottom:12px">📅</div>
       Sin deudas del mes registradas.
       <br><button onclick="openAddMonthlyModal()" style="margin-top:14px;background:#2a1a00;border:1px solid #4a3010;color:#f59e0b;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Agregar primera</button>
@@ -3588,7 +3611,7 @@ function renderMonthlyDebts(el){
     if(pending.length>0){
       html+=`<div style="font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:600">POR PAGAR</div>`;
       pending.forEach((d,i)=>{
-        html+=`<div class="monthly-stack-card" style="position:sticky;top:${70+i*20}px;z-index:${i+1};background:#16161e;border:1px solid #2a2a3a;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideUp .25s ${i*.04}s cubic-bezier(.22,1,.36,1) both">
+        html+=`<div class="monthly-stack-card" style="position:sticky;top:${70+i*20}px;z-index:${i+1};background:#1B0E05;border:1px solid rgba(224,169,79,.20);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideUp .25s ${i*.04}s cubic-bezier(.22,1,.36,1) both">
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</div>
             <div style="font-size:12px;color:#555;margin-top:3px">📅 ${d.categoria||"Otro"}</div>
@@ -3596,8 +3619,8 @@ function renderMonthlyDebts(el){
           <div style="text-align:right;flex-shrink:0">
             <div style="font-family:monospace;font-weight:700;font-size:17px;color:#f59e0b">${fmt(d.amount)}</div>
             <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
-              <button onclick="markMonthlyPaid(${d.id})" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✓ Pagado</button>
-              <button onclick="deleteMonthlyDebt(${d.id})" style="background:#1e1e2e;color:#555;border:1px solid #2a2a3a;border-radius:8px;padding:6px 8px;font-size:14px;cursor:pointer">✕</button>
+              <button onclick="markMonthlyPaid(${d.id})" style="background:linear-gradient(135deg,#E0A94F,#B86F16);color:#0D0703;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✓ Pagado</button>
+              <button onclick="deleteMonthlyDebt(${d.id})" style="background:#1e1e2e;color:#555;border:1px solid rgba(224,169,79,.20);border-radius:8px;padding:6px 8px;font-size:14px;cursor:pointer">✕</button>
             </div>
           </div>
         </div>`;
@@ -3609,10 +3632,10 @@ function renderMonthlyDebts(el){
       paid.forEach((d,i)=>{
         html+=`<div style="background:#0d160d;border:1px solid #1a3020;border-radius:14px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;opacity:.7">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:600;font-size:14px;color:#4ade80;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
+            <div style="font-weight:600;font-size:14px;color:#E0A94F;text-decoration:line-through;text-decoration-color:#2a5a2a">${esc(d.name)}</div>
             <div style="font-size:12px;color:#3a6a3a;margin-top:2px">${d.categoria||"Otro"}</div>
           </div>
-          <div style="font-family:monospace;font-size:15px;color:#4ade80">${fmt(d.amount)}</div>
+          <div style="font-family:monospace;font-size:15px;color:#E0A94F">${fmt(d.amount)}</div>
           <button onclick="deleteMonthlyDebt(${d.id})" style="background:none;border:none;color:#333;font-size:16px;cursor:pointer">✕</button>
         </div>`;
       });
