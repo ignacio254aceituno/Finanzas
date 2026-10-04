@@ -3825,10 +3825,10 @@ checkDailyReminder();
 <style id="zynto-warm-lock">
 html,body{background:#0D0703!important;color:#F5EFE5!important;color-scheme:dark!important}
 body{background-image:radial-gradient(900px 600px at 0% 0%,rgba(184,111,22,.24),transparent 58%),radial-gradient(800px 600px at 100% 20%,rgba(224,169,79,.14),transparent 60%),linear-gradient(180deg,#0D0703 0%,#140A04 50%,#0D0703 100%)!important}
-#header,#side-menu,#side-menu-tab,.card,#balance-card,.balance-card,.bank-card,.debt-card,.monthly-stack-card,.goal-card,.tx-card,.modal-box,.modal,.sheet,.toast,.settings-card{background-color:#15100B!important;border-color:rgba(224,169,79,.28)!important;color:#F5EFE5!important}
+#header,#side-menu,#side-menu-tab,.card,#balance-card,.balance-card,.bank-card,.debt-card,.monthly-stack-card,.goal-card,.tx-card,.modal-box,.modal,.sheet,.toast,.settings-card{background-color:rgba(38,22,10,.48)!important;background-image:linear-gradient(145deg,rgba(255,224,163,.055),rgba(0,0,0,.10))!important;backdrop-filter:blur(22px) saturate(125%)!important;-webkit-backdrop-filter:blur(22px) saturate(125%)!important;border-color:rgba(224,169,79,.25)!important;color:#F5EFE5!important}
 #content{color:#F5EFE5!important}
 #content .section-label,#content .form-label{color:#CDBB9D!important}
-#content input,#content select,#content textarea,.form-input{background:#241307!important;color:#FFF0C9!important;border-color:rgba(224,169,79,.32)!important}
+#content input,#content select,#content textarea,.form-input{background:rgba(44,25,9,.48)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important;color:#FFF0C9!important;border-color:rgba(224,169,79,.30)!important}
 button,.type-btn,.cat-btn,.goal-btn{color:#F5EFE5!important;border-color:rgba(224,169,79,.28)!important}
 button.primary,.primary,.fab,#fab-add{background:linear-gradient(135deg,#EAB45C,#B86F16)!important;color:#0D0703!important}
 .logo-icon{background:linear-gradient(145deg,#E0A94F,#8B4E0D)!important;color:#0D0703!important}
@@ -3916,6 +3916,75 @@ try{sessionStorage.setItem('fin_unlocked','1');}catch(e){}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',clean); else clean();
   new MutationObserver(clean).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<style id="zynto-plus-final">
+/* Botón + definitivo: siempre visible y conectado a openQuickAdd() */
+#zynto-quick-add{
+  position:fixed !important;
+  left:22px !important;
+  right:auto !important;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
+  width:64px !important;
+  height:64px !important;
+  min-width:64px !important;
+  min-height:64px !important;
+  max-width:64px !important;
+  max-height:64px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:2147483647 !important;
+  border-radius:50% !important;
+  border:2px solid #FFE4A3 !important;
+  background:linear-gradient(145deg,#F2C96B,#D9962F 55%,#8B4E0D) !important;
+  color:#160B03 !important;
+  font:800 38px/1 Arial,sans-serif !important;
+  text-align:center !important;
+  padding:0 !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  overflow:visible !important;
+  transform:none !important;
+  box-shadow:0 8px 26px rgba(0,0,0,.55),0 0 20px rgba(224,169,79,.35) !important;
+}
+#zynto-quick-add:active{transform:scale(.90) !important}
+@media (min-width:700px){#zynto-quick-add{left:28px !important;bottom:28px !important}}
+</style>
+<script>
+(function(){
+  function ensureQuickAdd(){
+    var b=document.getElementById('zynto-quick-add');
+    if(!b){
+      b=document.createElement('button');
+      b.id='zynto-quick-add';
+      b.type='button';
+      b.textContent='+';
+      b.setAttribute('aria-label','Añadir dinero');
+      b.title='Añadir ingreso o gasto';
+      b.onclick=function(){ if(typeof openQuickAdd==='function') openQuickAdd(); };
+    }
+    if(b.parentElement!==document.body) document.body.appendChild(b);
+    var loading=document.getElementById('loading-screen');
+    var ready=!loading || !document.body.contains(loading);
+    b.style.setProperty('display','flex','important');
+    b.style.setProperty('z-index','2147483647','important');
+    b.style.setProperty('visibility',ready?'visible':'hidden','important');
+    b.style.setProperty('opacity',ready?'1':'0','important');
+    b.style.setProperty('pointer-events',ready?'auto':'none','important');
+  }
+  function watch(){
+    ensureQuickAdd();
+    var mo=new MutationObserver(ensureQuickAdd);
+    mo.observe(document.body,{childList:true,subtree:true});
+    setTimeout(ensureQuickAdd,2300);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',watch); else watch();
 })();
 </script>
 
