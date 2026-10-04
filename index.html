@@ -1103,6 +1103,9 @@ window.addEventListener('DOMContentLoaded',function(){
 </nav>
 <button id="fab-add" onclick="setView('add')" aria-label="Agregar">+</button>
 
+<!-- ZYNTO QUICK ADD: gasto o ingreso, conectado al balance -->
+<button id="zynto-quick-add" onclick="openQuickAdd()" aria-label="Añadir gasto o ingreso" title="Añadir gasto o ingreso">+</button>
+
 <div id="modal-overlay" onclick="closeModal()">
   <div id="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title" id="modal-title"></div>
@@ -2316,6 +2319,7 @@ function renderAdd(el){
     <div style="margin-bottom:18px"><label class="form-label">Categoría</label><div class="cats-wrap">${cats.map(cat=>`<button class="cat-btn ${form.categoria===cat?"selected":""}" onclick="setFormCat('${cat}')">${catIcon(form.tipo,cat)} ${cat}</button>`).join("")}</div><div style="margin-top:8px;font-size:12px;color:#666;text-decoration:underline;cursor:pointer" onclick="setView('tools')">+ Crear categoría nueva en Herramientas</div></div>
     <div style="margin-bottom:22px"><label class="form-label">Fecha</label><input class="form-input" id="f-fecha" type="date" value="${form.fecha}" style="font-family:'DM Mono',monospace;color:#ccc" oninput="form.fecha=this.value" /></div>
     <button class="submit-btn" style="background:${btnGrad}" onclick="submitForm()">Registrar ${isIn?"ingreso":"gasto"}</button>
+    <div style="text-align:center;font-size:11px;color:#9E8A6B;margin-top:9px">Se actualizará automáticamente tu Balance disponible.</div>
   </div>`;
 }
 
@@ -3093,6 +3097,18 @@ function askDeleteCategory(name){
 }
 
 // ── FORM ACTIONS ──────────────────────────────────────────
+// Botón +: abre el formulario de movimiento. Los ingresos y gastos se guardan en
+// "transactions" y el balance se recalcula con getFinancialSummary() al volver a Inicio.
+function openQuickAdd(){
+  form.tipo="gasto";
+  form.descripcion="";
+  form.monto="";
+  form.categoria=CATS.gasto[0];
+  form.fecha=todayStr();
+  setView("add");
+  setTimeout(()=>document.getElementById("f-monto")?.focus(),80);
+}
+
 function setFormTipo(tipo){ form.tipo=tipo; form.categoria=CATS[tipo][0]; renderAdd(document.getElementById("content")); }
 function setFormCat(cat){ form.categoria=cat; renderAdd(document.getElementById("content")); }
 function submitForm(){
@@ -3846,6 +3862,41 @@ try{sessionStorage.setItem('fin_unlocked','1');}catch(e){}
 </script>
 
 
+<style id="zynto-quick-add-style">
+#zynto-quick-add{
+  position:fixed!important;
+  left:18px!important;
+  right:auto!important;
+  bottom:max(18px,calc(env(safe-area-inset-bottom) + 18px))!important;
+  z-index:125!important;
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:20px!important;
+  border:1px solid rgba(255,224,163,.72)!important;
+  background:linear-gradient(145deg,#F2C96B 0%,#D9962F 52%,#8B4E0D 100%)!important;
+  color:#1A0D04!important;
+  font-family:Arial,sans-serif!important;
+  font-size:36px!important;
+  font-weight:300!important;
+  line-height:58px!important;
+  text-align:center!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.48),0 0 22px rgba(224,169,79,.22)!important;
+  transform:none!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  overflow:visible!important;
+}
+#zynto-quick-add:active{transform:scale(.92)!important}
+@media (min-width:700px){#zynto-quick-add{left:24px!important;bottom:24px!important}}
+</style>
 <style id="zynto-final-cleanup">
 /* LIMPIEZA DEFINITIVA */
 #fab-add,#ticker-wrap,#toast{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;max-width:0!important;max-height:0!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;overflow:hidden!important;}
