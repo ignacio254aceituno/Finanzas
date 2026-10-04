@@ -922,6 +922,30 @@ body.light-mode #header,body.light-mode .card,body.light-mode .modal-box{backgro
   if(el){el.innerHTML='Z<span class="zynto-y">y</span>nto';el.style.fontSize='27px';}
 })();
 </script>
+
+<style id="zynto-remove-unwanted-final">
+/* ZYNTO FINAL CLEAN: no image logo, no floating bottom bars */
+#header .logo-icon,
+#header .logo img,
+#header .logo picture,
+#header .logo svg,
+.logo-icon,
+.logo-mark img{display:none!important;width:0!important;height:0!important;max-width:0!important;max-height:0!important;overflow:hidden!important;visibility:hidden!important;}
+#header .logo{display:flex!important;align-items:center!important;gap:0!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;}
+#header .logo-text{display:block!important;background:none!important;border:0!important;box-shadow:none!important;color:#FFF0C9!important;font-size:27px!important;font-weight:800!important;letter-spacing:-.045em!important;}
+#header .logo-text .zynto-y{color:#E0A94F!important;}
+#fab-add,#ticker-wrap,#toast{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;height:0!important;min-height:0!important;max-height:0!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;}
+#fab-add::before,#fab-add::after,#toast::before,#toast::after{content:none!important;display:none!important;}
+</style>
+<script>
+window.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('#header .logo-icon,#header .logo img,#header .logo picture,#header .logo svg').forEach(function(e){e.remove();});
+  var logo=document.querySelector('#header .logo-text');
+  if(logo){logo.innerHTML='Z<span class="zynto-y">y</span>nto';}
+  ['fab-add','ticker-wrap','toast'].forEach(function(id){var e=document.getElementById(id);if(e){e.remove();}});
+});
+</script>
+
 </head>
 <body>
 
@@ -1028,9 +1052,7 @@ body.light-mode #header,body.light-mode .card,body.light-mode .modal-box{backgro
 </div>
 
 <div id="header">
-  <div class="logo">
-    
-    <span class="logo-text">Zynto</span>
+  <div class="logo"><span class="logo-text">Zynto</span>
   </div>
   <input type="month" id="month-input" />
   <button id="sync-btn" onclick="manualSync()" title="Sincronizar con Google Sheets" style="background:#0D0703;border:1px solid #262626;color:#F5EFE5;border-radius:8px;padding:6px 9px;font-size:14px;margin-left:6px;cursor:pointer">🔄</button>
