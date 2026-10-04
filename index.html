@@ -3845,5 +3845,28 @@ body.light-mode #content,body.light-mode #header,body.light-mode .card,body.ligh
 try{sessionStorage.setItem('fin_unlocked','1');}catch(e){}
 </script>
 
+
+<style id="zynto-final-cleanup">
+/* LIMPIEZA DEFINITIVA */
+#fab-add,#ticker-wrap,#toast{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;max-width:0!important;max-height:0!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;overflow:hidden!important;}
+#header .logo-icon,#header .logo img,#header .logo picture,#header .logo svg,.logo-mark,.logo-mark img{display:none!important;width:0!important;height:0!important;max-width:0!important;max-height:0!important;visibility:hidden!important;}
+#header .logo{display:flex!important;align-items:center!important;gap:0!important;}
+#header .logo-text{font-size:27px!important;font-weight:800!important;color:#FFF0C9!important;letter-spacing:-.045em!important;}
+#header .logo-text .zynto-y{color:#E0A94F!important;}
+/* Evita cualquier barra horizontal accidental dentro de las tarjetas bancarias */
+.swipe-wrap,.swipe-content{overflow:hidden!important;}
+.swipe-content::before,.swipe-content::after,.bank-card::before,.bank-card::after{display:none!important;content:none!important;}
+</style>
+<script>
+(function(){
+  function clean(){
+    ['fab-add','ticker-wrap','toast'].forEach(function(id){var e=document.getElementById(id);if(e)e.remove();});
+    document.querySelectorAll('#header .logo-icon,#header .logo img,#header .logo picture,#header .logo svg,.logo-mark,.logo-mark img').forEach(function(e){e.remove();});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',clean); else clean();
+  new MutationObserver(clean).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
