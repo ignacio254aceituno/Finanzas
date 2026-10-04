@@ -1333,15 +1333,29 @@ function getForecast(){
   return {forecast,avgInc,avgExp,avgSave};
 }
 
+// ── CÁLCULO FINANCIERO CENTRALIZADO ───────────────────────
+// Una sola fórmula para que el balance no cambie según la tarjeta que lo muestre.
+function getFinancialSummary(filtered){
+  const ingresos=filtered.filter(t=>t.tipo==="ingreso").reduce((s,t)=>s+Number(t.monto||0),0);
+  const gastos=filtered.filter(t=>t.tipo==="gasto").reduce((s,t)=>s+Number(t.monto||0),0);
+  const deudasPendientes=debts.reduce((s,d)=>s+Math.max(0,Number(d.total||0)-Number(d.paid||0)),0);
+  const cuotasMesPendientes=monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+Number(d.amount||0),0);
+  // Las deudas ya pagadas NO se vuelven a restar: si se registraron como gasto,
+  // ya están incluidas en "gastos". Así evitamos doble descuento.
+  const balance=ingresos-gastos-deudasPendientes-cuotasMesPendientes;
+  return {ingresos,gastos,deudasPendientes,cuotasMesPendientes,balance};
+}
+
 // ── RENDER ────────────────────────────────────────────────
 function render(){
   const month=monthInput.value;
   const filtered=transactions.filter(t=>t.fecha.startsWith(month));
-  const totalIn=filtered.filter(t=>t.tipo==="ingreso").reduce((s,t)=>s+t.monto,0);
-  const totalOut=filtered.filter(t=>t.tipo==="gasto").reduce((s,t)=>s+t.monto,0);
-  const totalDebtCalc=debts.filter(d=>d.paid>0&&d.paid<d.total).reduce((s,d)=>s+(d.total-d.paid),0); // pendiente por pagar
-  const totalDebtPaidFull=debts.filter(d=>d.paid>=d.total&&d.total>0).reduce((s,d)=>s+d.total,0);   // pagada al 100%
-  const balance=totalIn-totalOut-totalDebtCalc;
+  const summary=getFinancialSummary(filtered);
+  const totalIn=summary.ingresos;
+  const totalOut=summary.gastos;
+  const totalDebtCalc=summary.deudasPendientes;
+  const totalDebtPaidFull=0;
+  const balance=summary.balance;
   const el=document.getElementById("content");
   if(currentView==="dashboard") renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebtCalc,totalDebtPaidFull);
   else if(currentView==="monthly") renderMonthlyDebts(el);
@@ -1543,29 +1557,29 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   }
 
   let html = "";
-  // Carrusel deslizable: gráfico primero, deslizar hacia el lado para ver las tarjetas
-  html += `<div class="hcarousel" id="home-carousel" onscroll="updateCarouselDots()">
-    <div class="hcarousel-slide">${chartHtml || `<div class="card" style="text-align:center;color:#666;padding:30px 20px">Sin gastos este mes para graficar</div>`}</div>
-    <div class="hcarousel-slide">${cardsHtml}</div>
-  </div>
-  <div class="hcarousel-dots" id="home-carousel-dots"><span class="dot active"></span><span class="dot"></span></div>`;
 
-  html+=`
-  <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#0a2a1a,#0d1f30)":"linear-gradient(135deg,#2a0a0a,#1a0d0d)"};border:1px solid ${positive?"#1a4030":"#401a1a"}">
-    <div class="glow" style="background:${positive?"rgba(74,222,128,.07)":"rgba(248,113,113,.07)"}"></div>
-    <div id="balance-label">Balance real (incluye deudas)</div>
-    <div id="balance-amount" style="color:${positive?"#E0A94F":"#C96B4A"}">${fmt(0)}</div>
-    <div class="balance-row" style="flex-wrap:wrap;gap:10px">
-      <div class="balance-stat"><div class="balance-stat-label" style="color:#E0A94F">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
-      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#C96B4A">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
-      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#fb923c">💳 DEUDAS</div><div class="balance-stat-val" style="color:${totalDebt>0?"#fb923c":"#E0A94F"}">${totalDebt>0?"-"+fmt(totalDebt):"$0"}</div></div>
-      <div style="width:100%;height:1px;background:rgba(224,169,79,.20)"></div>
-      <div class="balance-stat"><div class="balance-stat-label" style="color:#f59e0b">📅 DEUDAS MES</div><div class="balance-stat-val" style="color:#f59e0b">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
-      <div style="width:1px;background:rgba(224,169,79,.20)"></div>
-      <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#888">💰 REAL</div><div class="balance-stat-val" style="color:${(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))>=0?"#E0A94F":"#C96B4A"}">${fmt(totalIn-totalOut-totalDebt-(totalDebtPaidFull||0)-monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+  // Balance primero: es el dato principal de la pantalla de Inicio.
+  html += `
+  <div id="home-main-stack">
+    <div id="balance-card" style="background:${positive?"linear-gradient(135deg,#2c1909,#140a04)":"linear-gradient(135deg,#2a0f08,#140805)"};border:1px solid rgba(224,169,79,.34)">
+      <div class="glow" style="background:${positive?"rgba(224,169,79,.09)":"rgba(201,107,74,.08)"}"></div>
+      <div id="balance-label">Balance disponible</div>
+      <div id="balance-amount" style="color:${positive?"#FFF0C9":"#E5A18A"}">${fmt(balance)}</div>
+      <div style="font-size:11px;color:#A99B88;margin:-7px 0 14px;line-height:1.45">Ingresos − gastos − deudas pendientes − cuotas del mes</div>
+      <div class="balance-row" style="flex-wrap:wrap;gap:10px">
+        <div class="balance-stat"><div class="balance-stat-label" style="color:#E0A94F">↑ INGRESOS</div><div class="balance-stat-val">${fmt(totalIn)}</div></div>
+        <div style="width:1px;background:rgba(224,169,79,.20)"></div>
+        <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#C96B4A">↓ GASTOS</div><div class="balance-stat-val">${fmt(totalOut)}</div></div>
+        <div style="width:1px;background:rgba(224,169,79,.20)"></div>
+        <div class="balance-stat" style="padding-left:12px"><div class="balance-stat-label" style="color:#E0A94F">💳 DEUDAS PENDIENTES</div><div class="balance-stat-val" style="color:#E0A94F">-${fmt(totalDebt)}</div></div>
+        <div style="width:100%;height:1px;background:rgba(224,169,79,.20)"></div>
+        <div class="balance-stat"><div class="balance-stat-label" style="color:#D9962F">📅 CUOTAS DEL MES</div><div class="balance-stat-val" style="color:#D9962F">-${fmt(monthlyDebts.filter(d=>!d.pagado).reduce((s,d)=>s+d.amount,0))}</div></div>
+      </div>
     </div>
+
+    ${chartHtml || `<div class="card" style="text-align:center;color:#9e8a6b;padding:30px 20px">Sin gastos este mes para graficar</div>`}
+
+    ${cardsHtml}
   </div>`;
 
   {
@@ -1597,7 +1611,7 @@ function renderDashboard(el,filtered,totalIn,totalOut,balance,totalDebt,totalDeb
   // (el gráfico y las tarjetas ya se muestran arriba, en el carrusel deslizable)
 
   // Diferencia real: Ingresos vs TODAS las deudas pendientes (pagadas o no)
-  const allDebtTotal = debts.reduce((s,d)=>s+(d.total-d.paid),0);
+  const allDebtTotal = debts.reduce((s,d)=>s+Math.max(0,(d.total||0)-(d.paid||0)),0);
   const diferencia = totalIn - allDebtTotal;
   html+=`<div class="card" style="animation-delay:.02s;background:linear-gradient(135deg,#1a0a2a,#0a0a1f);border-color:#3a2a5a">
     <div class="section-label">Proyección: Ingresos vs Deudas totales</div>
@@ -3518,8 +3532,6 @@ async function unlockWithFaceID(){
     document.getElementById("lock-error").textContent="Face ID no reconocido, usa tu contraseña";
   }
 }
-initFaceIDUI();
-
 async function initialSync(){
   if(API_URL==="PEGA_TU_URL_AQUI") return;
   const hasLocalData = transactions.length>0 || debts.length>0 || goals.length>0 || monthlyDebts.length>0 || receivables.length>0;
@@ -3769,6 +3781,23 @@ button.primary,.primary,.fab,#fab-add{background:linear-gradient(135deg,#EAB45C,
 body.light-mode{filter:none!important;background:#0D0703!important;color:#F5EFE5!important}
 body.light-mode #content,body.light-mode #header,body.light-mode .card,body.light-mode .modal-box{background-color:#15100B!important;color:#F5EFE5!important}
 </style>
-<script>try{localStorage.removeItem('fin_light_mode');}catch(e){} document.body.classList.remove('light-mode');</script>
+<script>try{localStorage.removeItem('fin_light_mode');sessionStorage.setItem('fin_unlocked','1');}catch(e){} document.body.classList.remove('light-mode');</script>
+
+<style id="zynto-no-password-and-layout-fix">
+/* Zynto: acceso directo, sin pantalla de contraseña */
+#lock-screen{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#side-menu-tab.open{right:min(310px,86vw)!important}
+
+/* Inicio: balance arriba y gráfico debajo, sin carrusel */
+#home-main-stack{display:flex!important;flex-direction:column!important;gap:14px!important}
+#home-main-stack > .card{width:100%!important;box-sizing:border-box!important}
+
+/* Paleta cálida para el botón lateral */
+#side-menu-tab{background:rgba(36,19,7,.92)!important;border-color:rgba(224,169,79,.30)!important;color:#FFF0C9!important}
+</style>
+<script>
+try{sessionStorage.setItem('fin_unlocked','1');}catch(e){}
+</script>
+
 </body>
 </html>
